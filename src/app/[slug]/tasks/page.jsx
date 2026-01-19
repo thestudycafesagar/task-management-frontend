@@ -40,7 +40,8 @@ export default function TasksPage() {
       const response = await apiClient.get(`/tasks?${queryParams.toString()}`);
       return response.data.data.tasks;
     },
-    staleTime: 60000, // Data stays fresh for 60 seconds
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const handleTaskClick = (task) => {

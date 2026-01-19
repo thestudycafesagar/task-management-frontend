@@ -73,7 +73,7 @@ export default function useFCMToken() {
 
       // Register service worker
       if ('serviceWorker' in navigator) {
-        console.log('🔧 Registering service worker...');
+        console.log('🔧 Registering service worker (FCM only, no caching)...');
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
           scope: '/',
           updateViaCache: 'none'

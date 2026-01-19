@@ -81,35 +81,73 @@ export const useSocketNotifications = () => {
         }
       });
 
-      // Invalidate notifications query to refetch
-      queryClient.invalidateQueries(['notifications']);
+      // FORCE immediate refetch instead of just invalidating
+      queryClient.refetchQueries(['notifications']);
       
       // Invalidate task queries if it's task-related
       if (notification.taskId) {
-        queryClient.invalidateQueries(['tasks']);
-        queryClient.invalidateQueries(['recent-tasks']);
-        queryClient.invalidateQueries(['task-stats']);
+        // Force refetch for instant UI update
+        queryClient.refetchQueries(['tasks']);
+        queryClient.refetchQueries(['recent-tasks']);
+        queryClient.refetchQueries(['all-tasks']);
+        queryClient.refetchQueries(['task-stats']);
       }
     });
 
     // Listen for task updates (real-time collaboration)
     socket.on('task-updated', (data) => {
-      console.log('📝 Task updated by:', data.updatedBy);
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['recent-tasks']);
-      queryClient.invalidateQueries(['task-stats']);
+      console.log('📝 Task updated:', {
+        action: data.action,
+        updatedBy: data.updatedBy,
+        taskId: data.task?._id,
+        statusChanged: data.statusChanged
+      });
+      
+      // FORCE immediate refetch for instant UI update (WhatsApp-like)
+      queryClient.refetchQueries({ queryKey: ['tasks'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['recent-tasks'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['all-tasks'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['task-stats'], type: 'active' });
+      
+      // Show toast notification for certain actions
+      if (data.updatedBy !== user?.email) {
+        const actionMessages = {
+          'accepted': `✅ Task "${data.task?.title}" was accepted`,
+          'started': `🚀 Work started on "${data.task?.title}"`,
+          'submitted': `📤 Task "${data.task?.title}" was submitted`,
+          'completed': `🎉 Task "${data.task?.title}" was completed`,
+          'rejected': `⚠️ Task "${data.task?.title}" needs revision`
+        };
+        
+        const message = actionMessages[data.action] || `Task "${data.task?.title}" was updated`;
+        
+        if (data.action && data.action !== 'comment-added') {
+          toast(message, {
+            icon: data.action === 'completed' ? '🎉' : '📝',
+            duration: 3000,
+            position: 'top-right'
+          });
+        }
+      }
     });
 
     // Listen for new tasks created
     socket.on('task-created', (data) => {
-      console.log('✨ New task created by:', data.createdBy);
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['recent-tasks']);
-      queryClient.invalidateQueries(['task-stats']);
+      console.log('✨ New task created:', {
+        createdBy: data.createdBy,
+        taskId: data.task?._id,
+        title: data.task?.title
+      });
+      
+      // FORCE immediate refetch for instant UI update (WhatsApp-like)
+      queryClient.refetchQueries({ queryKey: ['tasks'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['recent-tasks'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['all-tasks'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['task-stats'], type: 'active' });
       
       // Show toast if not the creator
       if (data.createdBy !== user?.email) {
-        toast('New task assigned', {
+        toast(`New task: ${data.task?.title || 'Task assigned'}`, {
           icon: '📋',
           duration: 3000,
           position: 'top-right',
@@ -126,10 +164,25 @@ export const useSocketNotifications = () => {
 
     // Listen for tasks deleted
     socket.on('task-deleted', (data) => {
-      console.log('🗑️ Task deleted by:', data.deletedBy);
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['recent-tasks']);
-      queryClient.invalidateQueries(['task-stats']);
+      console.log('🗑️ Task deleted:', {
+        deletedBy: data.deletedBy,
+        taskId: data.taskId
+      });
+      
+      // FORCE immediate refetch for instant UI update (WhatsApp-like)
+      queryClient.refetchQueries({ queryKey: ['tasks'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['recent-tasks'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['all-tasks'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['task-stats'], type: 'active' });
+      
+      // Show toast notification
+      if (data.deletedBy !== user?.email) {
+        toast('A task was deleted', {
+          icon: '🗑️',
+          duration: 2000,
+          position: 'top-right'
+        });
+      }
     });
 
     // Cleanup on unmount

@@ -5,19 +5,11 @@ import './globals.css';
 export const metadata = {
   title: 'Task Management - Organize Your Work',
   description: 'Modern task management platform for teams',
-  manifest: '/manifest.json',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'TaskFlow',
-  },
 };
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   themeColor: '#6366f1',
 };
 
@@ -27,12 +19,7 @@ export default function RootLayout({ children }) {
       <head>
         <meta charSet="utf-8" />
         <link rel="icon" href="/icons/web/favicon.ico" />
-        <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#6366f1" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="TaskFlow" />
-        <link rel="apple-touch-icon" href="/icons/web/apple-touch-icon.png" />
       </head>
       <body className="antialiased">
         <ClientProviders>

@@ -32,7 +32,8 @@ export default function TopNavbar() {
       console.log('📩 Fetched notifications:', response.data.data);
       return response.data.data;
     },
-    staleTime: 60000, // Data stays fresh for 60 seconds
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     enabled: !!user, // Only fetch if user is logged in
   });
 
@@ -51,7 +52,7 @@ export default function TopNavbar() {
     },
     onSuccess: (_, notificationId) => {
       markAsRead(notificationId);
-      queryClient.invalidateQueries(['notifications']);
+      queryClient.refetchQueries({ queryKey: ['notifications'], type: 'active' });
     },
   });
 
@@ -62,7 +63,7 @@ export default function TopNavbar() {
     },
     onSuccess: () => {
       markAllAsRead();
-      queryClient.invalidateQueries(['notifications']);
+      queryClient.refetchQueries({ queryKey: ['notifications'], type: 'active' });
       toast.success('All notifications marked as read');
     },
   });

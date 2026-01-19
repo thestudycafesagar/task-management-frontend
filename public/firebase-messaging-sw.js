@@ -107,14 +107,25 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(promiseChain);
 });
 
-// Service worker activation
+// Service worker activation - skip waiting to avoid caching
 self.addEventListener('activate', (event) => {
   console.log('✅ Service Worker activated');
+  // Clear all caches on activation
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          console.log('🗑️ Deleting cache:', cacheName);
+          return caches.delete(cacheName);
+        })
+      );
+    })
+  );
 });
 
-// Service worker installation
+// Service worker installation - no caching, FCM only
 self.addEventListener('install', (event) => {
-  console.log('✅ Service Worker installed');
+  console.log('✅ Service Worker installed (FCM only, no caching)');
   self.skipWaiting();
 });
 
