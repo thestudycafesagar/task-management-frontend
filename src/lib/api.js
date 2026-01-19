@@ -1,0 +1,53 @@
+import axios from 'axios';
+
+const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor
+apiClient.interceptors.request.use(
+  (config) => {
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor
+apiClient.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    if (error.response?.status === 401) {
+      // Clear any invalid cookies and redirect to login
+      if (typeof window !== 'undefined') {
+        // Clear the auth cookie
+        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        
+        // Clear auth store if available
+        try {
+          const { default: useAuthStore } = await import('@/store/authStore');
+          const store = useAuthStore.getState();
+          store.setUser(null);
+          store.setOrganization(null);
+        } catch (e) {
+          // Store might not be available, continue anyway
+        }
+        
+        // Only redirect if not already on login page
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default apiClient;
