@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AiTwotoneNotification } from "react-icons/ai";
 import { FiBell, FiLogOut, FiAlertCircle, FiSettings, FiClock, FiCheckCircle, FiMessageSquare } from 'react-icons/fi';
 import useAuthStore from '@/store/authStore';
 import useNotificationStore from '@/store/notificationStore';
@@ -72,14 +73,14 @@ export default function TopNavbar() {
     switch (type) {
       case 'TASK_ASSIGNED':
       case 'TASK_UPDATED':
-        return { icon: FiClock, color: 'bg-blue-100 text-blue-600' };
+        return { icon: AiTwotoneNotification, color: 'bg-blue-100 text-blue-600' };
       case 'TASK_COMMENT':
         return { icon: FiMessageSquare, color: 'bg-purple-100 text-purple-600' };
       case 'TASK_COMPLETED':
       case 'TASK_ACCEPTED':
         return { icon: FiCheckCircle, color: 'bg-green-100 text-green-600' };
       default:
-        return { icon: FiAlertCircle, color: 'bg-gray-100 text-gray-600' };
+        return { icon: FiAlertCircle, color: 'bg-red-100 text-gray-600' };
     }
   };
 
