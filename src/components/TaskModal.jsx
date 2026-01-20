@@ -10,11 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
 import apiClient from '@/lib/api';
+import useAuthStore from '@/store/authStore';
 
 /**
  * Task modal component for viewing and editing tasks
  */
 export default function TaskModal({ task, isOpen, onClose, onUpdate }) {
+  const { user, hasAdminPrivileges } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState(task?.status);
   const [uploading, setUploading] = useState(false);
@@ -141,7 +143,7 @@ export default function TaskModal({ task, isOpen, onClose, onUpdate }) {
                   onClick={() => handleStatusChange(status)}
                   disabled={isLoading}
                   className={cn(
-                    'px-3 py-2 text-sm font-medium rounded-lg border transition-all disabled:opacity-50',
+                    'px-3 py-2 text-sm font-medium rounded-lg border transition-all disabled:opacity-50 disabled:cursor-not-allowed',
                     selectedStatus === status
                       ? 'border-primary bg-primary text-primary-foreground shadow-sm'
                       : 'border-border bg-background hover:bg-accent text-foreground'

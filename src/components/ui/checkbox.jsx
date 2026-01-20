@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 const Checkbox = React.forwardRef(({ className, checked, onCheckedChange, ...props }, ref) => {
   return (
     <button
+      type="button"
       ref={ref}
       role="checkbox"
       aria-checked={checked}

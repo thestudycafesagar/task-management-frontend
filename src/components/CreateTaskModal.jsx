@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -21,6 +21,7 @@ export default function CreateTaskModal({ isOpen, onClose }) {
     dueDate: '',
     assignedTo: [] // Changed to array for multi-select
   });
+  const [employeeSearch, setEmployeeSearch] = useState('');
 
   // Fetch employees
   const { data: employeesData } = useQuery({
@@ -31,6 +32,12 @@ export default function CreateTaskModal({ isOpen, onClose }) {
     },
     enabled: isOpen
   });
+
+  // Filter employees based on search (name or email)
+  const filteredEmployees = employeesData?.filter((emp) =>
+    emp.name.toLowerCase().includes(employeeSearch.toLowerCase()) ||
+    emp.email.toLowerCase().includes(employeeSearch.toLowerCase())
+  ) || [];
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
@@ -178,9 +185,18 @@ export default function CreateTaskModal({ isOpen, onClose }) {
                 Assign To <span className="text-destructive">*</span>
                 <span className="text-xs text-muted-foreground ml-2">(Select multiple employees)</span>
               </Label>
+              {/* Employee Search */}
+              <input
+                type="text"
+                value={employeeSearch}
+                onChange={(e) => setEmployeeSearch(e.target.value)}
+                placeholder="Search employees by name or email..."
+                className="w-full mb-3 px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary"
+                disabled={createMutation.isPending}
+              />
               <div className="border border-input rounded-xl p-4 max-h-60 overflow-y-auto space-y-2 bg-background">
-                {employeesData && employeesData.length > 0 ? (
-                  employeesData.map((employee) => (
+                {filteredEmployees && filteredEmployees.length > 0 ? (
+                  filteredEmployees.map((employee) => (
                     <label
                       key={employee._id}
                       className="flex items-center gap-3 p-3 hover:bg-accent rounded-lg cursor-pointer transition-colors group"
@@ -219,7 +235,7 @@ export default function CreateTaskModal({ isOpen, onClose }) {
                     </label>
                   ))
                 ) : (
-                  <p className="text-muted-foreground text-center py-4">No employees available</p>
+                  <p className="text-muted-foreground text-center py-4">{employeeSearch ? 'No matching employees' : 'No employees available'}</p>
                 )}
               </div>
               {formData.assignedTo.length > 0 && (

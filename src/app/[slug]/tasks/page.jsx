@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import AppLayout from '@/components/AppLayout';
@@ -27,17 +27,25 @@ export default function TasksPage() {
     status: '',
     priority: '',
   });
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Check if user has admin privileges (using backend flag)
   const isAdmin = hasAdminPrivileges || user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 
   // Fetch tasks - Real-time updates via Socket.IO
   const { data: tasksData, isLoading, refetch } = useQuery({
-    queryKey: ['tasks', params.slug, filters],
+    queryKey: ['tasks', params.slug, filters, debouncedSearch],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
       if (filters.status) queryParams.append('status', filters.status);
       if (filters.priority) queryParams.append('priority', filters.priority);
+      if (debouncedSearch) queryParams.append('search', debouncedSearch);
       
       const response = await apiClient.get(`/tasks?${queryParams.toString()}`);
       return response.data.data.tasks;
@@ -105,6 +113,18 @@ export default function TasksPage() {
                 <option value="LOW">Low</option>
               </select>
             </div>
+            {/* Search box (admin only) - searches title/description */}
+            {isAdmin && (
+              <div className="w-full sm:w-64 ml-auto">
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search tasks..."
+                  className="w-full px-3 py-2 border border-border bg-card text-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                />
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
