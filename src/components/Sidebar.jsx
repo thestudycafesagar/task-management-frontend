@@ -2,6 +2,7 @@
 
 import { useState, useTransition, createContext, useContext } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import useAuthStore from '@/store/authStore';
@@ -193,8 +194,9 @@ export default function Sidebar() {
           {/* Logo */}
           <div className="h-16 flex items-center justify-between border-b border-sidebar-border px-4">
             <div className="flex items-center gap-3">
-              <div className="grid size-9 place-items-center rounded-xl bg-gradient-primary shadow-soft flex-shrink-0">
-                <div className="size-4 rounded-sm bg-primary-foreground/90" />
+              {/* Logo wrapper: round, fixed size */}
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-primary shadow-soft flex-shrink-0 grid place-items-center">
+                <Image src="/logo.png" alt="TaskFlow Logo" width={40} height={40} className="object-cover" />
               </div>
               {!isCollapsed && (
                 <span className="font-bold text-lg text-foreground whitespace-nowrap">TaskFlow</span>

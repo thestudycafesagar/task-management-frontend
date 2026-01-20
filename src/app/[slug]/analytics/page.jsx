@@ -10,21 +10,23 @@ import UserAvatar from '@/components/UserAvatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import apiClient from '@/lib/api';
 import { FiBarChart2, FiTrendingUp, FiUsers, FiCheckSquare, FiClock, FiAlertCircle, FiActivity } from 'react-icons/fi';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 export default function AnalyticsPage() {
   const params = useParams();
 
-  // Fetch tasks for analytics - Real-time updates via Socket.IO
-  const { data: tasksData, isLoading: tasksLoading } = useQuery({
-    queryKey: ['tasks', params.slug],
+  // Fetch comprehensive analytics data - Real-time updates via Socket.IO
+  const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
+    queryKey: ['analytics', params.slug],
     queryFn: async () => {
-      const response = await apiClient.get('/tasks');
-      return response.data.data.tasks;
+      const response = await apiClient.get('/tasks/analytics');
+      return response.data.data.analytics;
     },
-    staleTime: 60000, // Data stays fresh for 60 seconds
+    staleTime: 30000, // Data stays fresh for 30 seconds
+    refetchInterval: 60000, // Refetch every 60 seconds for real-time updates
   });
 
-  // Fetch employees
+  // Fetch employees for additional context
   const { data: employeesData, isLoading: employeesLoading } = useQuery({
     queryKey: ['employees', params.slug],
     queryFn: async () => {
@@ -33,109 +35,8 @@ export default function AnalyticsPage() {
     },
   });
 
-  const isLoading = tasksLoading || employeesLoading;
-
-  // Calculate analytics from real task data
-  const calculateAnalytics = () => {
-    if (!tasksData) return null;
-
-    const tasks = tasksData;
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t => t.status === 'COMPLETED').length;
-    const inProgressTasks = tasks.filter(t => t.status === 'IN_PROGRESS').length;
-    const todoTasks = tasks.filter(t => t.status === 'TODO').length;
-    const reviewTasks = tasks.filter(t => t.status === 'UNDER_REVIEW').length;
-    const rejectedTasks = tasks.filter(t => t.status === 'REJECTED').length;
-
-    // Calculate completion rate
-    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-    // Calculate average time for completed tasks
-    const completedWithTime = tasks.filter(t => 
-      t.status === 'COMPLETED' && t.acceptedAt && t.completedAt
-    );
-    
-    let avgTimePerTask = 0;
-    if (completedWithTime.length > 0) {
-      const totalHours = completedWithTime.reduce((sum, task) => {
-        const hours = (new Date(task.completedAt) - new Date(task.acceptedAt)) / (1000 * 60 * 60);
-        return sum + hours;
-      }, 0);
-      avgTimePerTask = Math.round(totalHours / completedWithTime.length);
-    }
-
-    // Employee performance
-    const employeeStats = {};
-    tasks.forEach(task => {
-      const empId = task.assignedTo?._id || task.assignedTo;
-      if (!empId) return;
-
-      if (!employeeStats[empId]) {
-        employeeStats[empId] = {
-          userId: empId,
-          userName: task.assignedTo?.name || 'Unknown',
-          user: task.assignedTo,
-          totalTasks: 0,
-          completedTasks: 0,
-          totalTime: 0,
-          taskCount: 0,
-        };
-      }
-
-      employeeStats[empId].totalTasks++;
-      if (task.status === 'COMPLETED') {
-        employeeStats[empId].completedTasks++;
-        
-        if (task.acceptedAt && task.completedAt) {
-          const hours = (new Date(task.completedAt) - new Date(task.acceptedAt)) / (1000 * 60 * 60);
-          employeeStats[empId].totalTime += hours;
-          employeeStats[empId].taskCount++;
-        }
-      }
-    });
-
-    const employeePerformance = Object.values(employeeStats)
-      .map(emp => ({
-        ...emp,
-        avgTime: emp.taskCount > 0 ? Math.round(emp.totalTime / emp.taskCount) : 0,
-        completionRate: emp.totalTasks > 0 ? Math.round((emp.completedTasks / emp.totalTasks) * 100) : 0,
-      }))
-      .sort((a, b) => b.completionRate - a.completionRate);
-
-    // Recent activity
-    const recentActivity = [...tasks]
-      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-      .slice(0, 10)
-      .map(task => ({
-        taskTitle: task.title,
-        action: task.status,
-        userName: task.assignedTo?.name || 'Unknown',
-        timestamp: task.updatedAt,
-      }));
-
-    return {
-      totalTasks,
-      completedTasks,
-      inProgressTasks,
-      todoTasks,
-      reviewTasks,
-      rejectedTasks,
-      completionRate,
-      avgTimePerTask,
-      activeEmployees: Object.keys(employeeStats).length,
-      employeePerformance,
-      recentActivity,
-      statusDistribution: {
-        TODO: todoTasks,
-        IN_PROGRESS: inProgressTasks,
-        UNDER_REVIEW: reviewTasks,
-        COMPLETED: completedTasks,
-        REJECTED: rejectedTasks,
-      },
-    };
-  };
-
-  const analytics = calculateAnalytics();
+  const isLoading = analyticsLoading || employeesLoading;
+  const analytics = analyticsData;
 
   const stats = [
     {
@@ -169,11 +70,13 @@ export default function AnalyticsPage() {
   ];
 
   const statusDistribution = [
-    { status: 'TODO', count: analytics?.statusDistribution?.TODO || 0, color: 'bg-muted-foreground' },
+    { status: 'PENDING', count: analytics?.statusDistribution?.PENDING || 0, color: 'bg-muted-foreground' },
+    { status: 'ACCEPTED', count: analytics?.statusDistribution?.ACCEPTED || 0, color: 'bg-blue-500' },
     { status: 'IN_PROGRESS', count: analytics?.statusDistribution?.IN_PROGRESS || 0, color: 'bg-primary' },
-    { status: 'UNDER_REVIEW', count: analytics?.statusDistribution?.UNDER_REVIEW || 0, color: 'bg-warning' },
+    { status: 'SUBMITTED', count: analytics?.statusDistribution?.SUBMITTED || 0, color: 'bg-warning' },
     { status: 'COMPLETED', count: analytics?.statusDistribution?.COMPLETED || 0, color: 'bg-success' },
     { status: 'REJECTED', count: analytics?.statusDistribution?.REJECTED || 0, color: 'bg-danger' },
+    { status: 'OVERDUE', count: analytics?.statusDistribution?.OVERDUE || 0, color: 'bg-red-600' },
   ];
 
   const totalStatusCount = statusDistribution.reduce((sum, s) => sum + s.count, 0);
@@ -261,12 +164,19 @@ export default function AnalyticsPage() {
                         <div className="text-sm text-muted-foreground">
                           {emp.completedTasks} of {emp.totalTasks} tasks completed
                         </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {emp.avgTimeCreationToComplete > 0 && (
+                            <span>⏱️ {emp.avgTimeCreationToComplete}h avg total time</span>
+                          )}
+                        </div>
                       </div>
 
                       <div className="text-right">
                         <div className="text-2xl font-bold text-primary">{emp.completionRate}%</div>
-                        {emp.avgTime > 0 && (
-                          <div className="text-xs text-muted-foreground">{emp.avgTime}h avg</div>
+                        {emp.avgTimeStartToComplete > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            {emp.avgTimeStartToComplete}h work time
+                          </div>
                         )}
                       </div>
                     </div>
@@ -332,6 +242,234 @@ export default function AnalyticsPage() {
         </Card>
       </div>
 
+      {/* Time Metrics Section */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FiClock className="text-primary" />
+            Task Completion Time Analysis
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <CardSkeleton />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="p-6 rounded-xl bg-primary/5 border border-primary/10">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
+                    <FiClock className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Time</p>
+                    <p className="text-xs text-muted-foreground">(Creation → Completion)</p>
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-foreground">
+                  {analytics?.timeMetrics?.avgCreationToComplete || 0}h
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Average time from task creation to completion
+                </p>
+              </div>
+
+              <div className="p-6 rounded-xl bg-success/5 border border-success/10">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-success rounded-xl flex items-center justify-center">
+                    <FiCheckSquare className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Response Time</p>
+                    <p className="text-xs text-muted-foreground">(Accept → Completion)</p>
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-foreground">
+                  {analytics?.timeMetrics?.avgAcceptToComplete || 0}h
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Average time from acceptance to completion
+                </p>
+              </div>
+
+              <div className="p-6 rounded-xl bg-warning/5 border border-warning/10">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-warning rounded-xl flex items-center justify-center">
+                    <FiActivity className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Work Time</p>
+                    <p className="text-xs text-muted-foreground">(Start → Completion)</p>
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-foreground">
+                  {analytics?.timeMetrics?.avgStartToComplete || 0}h
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Average actual work time on tasks
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Status Distribution Pie Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FiBarChart2 className="text-purple-500" />
+              Status Distribution Chart
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <CardSkeleton />
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={statusDistribution.filter(s => s.count > 0)}
+                    dataKey="count"
+                    nameKey="status"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label={({ status, percent }) => `${status}: ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {statusDistribution.map((entry, index) => {
+                      const colorMap = {
+                        'bg-muted-foreground': '#6B7280',
+                        'bg-blue-500': '#3B82F6',
+                        'bg-primary': '#3B82F6',
+                        'bg-warning': '#F59E0B',
+                        'bg-success': '#10B981',
+                        'bg-danger': '#EF4444',
+                        'bg-red-600': '#DC2626',
+                      };
+                      return <Cell key={`cell-${index}`} fill={colorMap[entry.color] || '#3B82F6'} />;
+                    })}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Top Performers Bar Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FiTrendingUp className="text-success" />
+              Top Performers
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <CardSkeleton />
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={analytics?.employeePerformance?.slice(0, 5) || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="userName" 
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="completionRate" fill="#10B981" name="Completion Rate %" />
+                  <Bar dataKey="completedTasks" fill="#3B82F6" name="Completed Tasks" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Employee Time Analysis Chart */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FiClock className="text-purple-500" />
+            Employee Time Analysis (Top 5)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <CardSkeleton />
+          ) : (
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={analytics?.employeePerformance?.slice(0, 5) || []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="userName" 
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis label={{ value: 'Hours', angle: -90, position: 'insideLeft' }} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="avgTimeCreationToComplete" fill="#3B82F6" name="Total Time (hours)" />
+                <Bar dataKey="avgTimeAcceptToComplete" fill="#10B981" name="Response Time (hours)" />
+                <Bar dataKey="avgTimeStartToComplete" fill="#F59E0B" name="Work Time (hours)" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Priority Distribution */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FiAlertCircle className="text-warning" />
+            Task Priority Breakdown
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <CardSkeleton />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {['HIGH', 'MEDIUM', 'LOW'].map((priority, index) => {
+                const count = analytics?.priorityDistribution?.[priority] || 0;
+                const total = analytics?.totalTasks || 1;
+                const percentage = Math.round((count / total) * 100);
+                const colors = {
+                  HIGH: { bg: 'bg-danger/10', text: 'text-danger', bar: 'bg-danger' },
+                  MEDIUM: { bg: 'bg-warning/10', text: 'text-warning', bar: 'bg-warning' },
+                  LOW: { bg: 'bg-success/10', text: 'text-success', bar: 'bg-success' },
+                };
+                const colorSet = colors[priority];
+
+                return (
+                  <div key={priority} className={`p-6 rounded-xl ${colorSet.bg} border border-border`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className={`text-lg font-bold ${colorSet.text}`}>{priority}</span>
+                      <span className="text-3xl font-bold text-foreground">{count}</span>
+                    </div>
+                    <div className="h-3 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${colorSet.bar} rounded-full transition-all duration-500`}
+                        style={{ width: `${percentage}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">{percentage}% of total tasks</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Recent Activity Timeline */}
       <Card>
         <CardHeader>
@@ -356,6 +494,15 @@ export default function AnalyticsPage() {
                       <div className="text-sm font-medium text-foreground">{activity.taskTitle}</div>
                       <div className="text-xs text-muted-foreground mt-1">
                         Status: {activity.action} • {activity.userName}
+                        {activity.priority && (
+                          <span className={`ml-2 px-2 py-0.5 rounded text-xs font-semibold ${
+                            activity.priority === 'HIGH' ? 'bg-danger/20 text-danger' :
+                            activity.priority === 'MEDIUM' ? 'bg-warning/20 text-warning' :
+                            'bg-success/20 text-success'
+                          }`}>
+                            {activity.priority}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="text-xs text-muted-foreground whitespace-nowrap">

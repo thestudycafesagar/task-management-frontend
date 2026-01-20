@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AiTwotoneNotification } from "react-icons/ai";
@@ -138,8 +139,12 @@ export default function TopNavbar() {
         {/* Left section - Organization info */}
         <div className="flex items-center gap-3">
           {/* Logo mark - hidden on mobile when hamburger is shown */}
-          <div className="hidden lg:grid size-8 place-items-center rounded-lg bg-gradient-primary shadow-soft">
-            <div className="size-3.5 rounded-sm bg-primary-foreground/90" />
+          <div className="hidden lg:flex items-center">
+            <div className="hidden lg:grid size-8 place-items-center rounded-full bg-gradient-primary shadow-soft overflow-hidden">
+              <div className="w-8 h-8 rounded-full overflow-hidden grid place-items-center">
+                <Image src="/logo.png" alt="TaskFlow" width={32} height={32} className="object-cover" />
+              </div>
+            </div>
           </div>
           {organization && (
             <div className="hidden md:block">

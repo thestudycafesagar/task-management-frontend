@@ -91,6 +91,7 @@ export const useSocketNotifications = () => {
         queryClient.refetchQueries(['recent-tasks']);
         queryClient.refetchQueries(['all-tasks']);
         queryClient.refetchQueries(['task-stats']);
+        queryClient.refetchQueries(['analytics']);
       }
     });
 
@@ -144,6 +145,7 @@ export const useSocketNotifications = () => {
       queryClient.refetchQueries({ queryKey: ['recent-tasks'], type: 'active' });
       queryClient.refetchQueries({ queryKey: ['all-tasks'], type: 'active' });
       queryClient.refetchQueries({ queryKey: ['task-stats'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['analytics'], type: 'active' });
       
       // Show toast if not the creator
       if (data.createdBy !== user?.email) {

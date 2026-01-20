@@ -252,3 +252,8 @@
 .skeleton {
   @apply animate-pulse bg-gray-200 rounded;
 }
+
+/* Gradient utilities */
+.gradient-primary {
+  background: var(--gradient-primary);
+}

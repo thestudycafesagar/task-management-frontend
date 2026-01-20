@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import useAuthStore from '@/store/authStore';
@@ -57,8 +58,8 @@ export default function LoginPage() {
           <div className="flex items-center justify-center mb-8">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur-xl opacity-50 animate-pulse"></div>
-              <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-xl">
-                <span className="text-3xl font-bold text-white">T</span>
+              <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-600 shadow-xl flex items-center justify-center">
+                <Image src="/logo.png" alt="TaskFlow Logo" width={65} height={65} className="object-cover" />
               </div>
             </div>
           </div>

@@ -76,38 +76,29 @@ export default function SuperAdminPage() {
     <div className="min-h-screen bg-background">
       <SuperAdminNavbar />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-primary/10 rounded-xl">
-              <FiBriefcase className="w-6 h-6 text-primary" />
-            </div>
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Organizations</h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Manage all organizations on the platform</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Organizations</h1>
+              <p className="text-sm text-muted-foreground mt-1">Manage all organizations on the platform</p>
             </div>
-          </div>
-        </div>
-
-        {/* Search */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <div className="relative w-full sm:w-72">
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search organizations..."
-                className="pl-10"
+                className="pl-9"
               />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
       {/* Organizations Table - Desktop */}
-      <Card className="hidden md:block overflow-hidden">
+      <Card className="hidden md:block rounded-xl shadow-sm">
         {isLoading ? (
           <CardContent className="p-6">
             <TableSkeleton rows={5} />
@@ -117,11 +108,11 @@ export default function SuperAdminPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-gray-700 dark:text-gray-300">Organization</TableHead>
-                  <TableHead className="text-gray-700 dark:text-gray-300">Users</TableHead>
-                  <TableHead className="text-gray-700 dark:text-gray-300">Created</TableHead>
-                  <TableHead className="text-gray-700 dark:text-gray-300">Status</TableHead>
-                  <TableHead className="text-right text-gray-700 dark:text-gray-300">Actions</TableHead>
+                  <TableHead>Organization</TableHead>
+                  <TableHead>Users</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -129,16 +120,18 @@ export default function SuperAdminPage() {
                   <TableRow key={org._id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-gray-100">{org.name}</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">/{org.slug}</div>
+                        <div className="font-semibold text-foreground">{org.name}</div>
+                        <div className="text-sm text-muted-foreground">/{org.slug}</div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-gray-700 dark:text-gray-300">
-                      {org.adminCount} admins, {org.employeeCount} employees
+                    <TableCell className="text-foreground">
+                      <div className="text-sm">
+                        <span className="font-medium">{org.adminCount}</span> admins, <span className="font-medium">{org.employeeCount}</span> employees
+                      </div>
                     </TableCell>
-                    <TableCell className="text-gray-700 dark:text-gray-300">{formatDate(org.createdAt)}</TableCell>
+                    <TableCell className="text-foreground">{formatDate(org.createdAt)}</TableCell>
                   <TableCell>
-                    <Badge variant={org.isActive ? 'success' : 'danger'}>
+                    <Badge variant={org.isActive ? 'success' : 'secondary'}>
                       {org.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </TableCell>
@@ -149,7 +142,7 @@ export default function SuperAdminPage() {
                         size="sm"
                         onClick={() => handleImpersonate(org)}
                       >
-                        <FiLogIn className="w-4 h-4 mr-1" />
+                        <FiLogIn className="w-4 h-4 mr-1.5" />
                         Impersonate
                       </Button>
                       <Button
@@ -162,12 +155,12 @@ export default function SuperAdminPage() {
                       >
                         {org.isActive ? (
                           <>
-                            <FiToggleRight className="w-4 h-4 mr-1" />
+                            <FiToggleRight className="w-4 h-4 mr-1.5" />
                             Disable
                           </>
                         ) : (
                           <>
-                            <FiToggleLeft className="w-4 h-4 mr-1" />
+                            <FiToggleLeft className="w-4 h-4 mr-1.5" />
                             Enable
                           </>
                         )}
@@ -193,57 +186,86 @@ export default function SuperAdminPage() {
       {/* Organizations Cards - Mobile */}
       <div className="md:hidden space-y-4">
         {isLoading ? (
-          <CardSkeleton />
+          <>
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </>
         ) : orgsData && orgsData.length > 0 ? (
           orgsData.map((org) => (
-            <Card key={org._id} className="p-4">
-              <div className="space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">{org.name}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">/{org.slug}</p>
+            <Card key={org._id} className="rounded-xl shadow-sm">
+              <CardContent className="p-4">
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground truncate">{org.name}</h3>
+                      <p className="text-sm text-muted-foreground mt-0.5">/{org.slug}</p>
+                    </div>
+                    <Badge variant={org.isActive ? 'success' : 'secondary'} className="shrink-0">
+                      {org.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
                   </div>
-                  <Badge variant={org.isActive ? 'success' : 'danger'}>
-                    {org.isActive ? 'Active' : 'Inactive'}
-                  </Badge>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Admins</p>
+                      <p className="font-medium text-foreground mt-0.5">{org.adminCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Employees</p>
+                      <p className="font-medium text-foreground mt-0.5">{org.employeeCount}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-muted-foreground">Created</p>
+                      <p className="font-medium text-foreground mt-0.5">{formatDate(org.createdAt)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 pt-2 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleImpersonate(org)}
+                      className="flex-1"
+                    >
+                      <FiLogIn className="w-4 h-4 mr-1.5" />
+                      Impersonate
+                    </Button>
+                    <Button
+                      variant={org.isActive ? 'destructive' : 'default'}
+                      size="sm"
+                      onClick={() => {
+                        setSelectedOrg(org);
+                        setShowToggleDialog(true);
+                      }}
+                      className="flex-1"
+                    >
+                      {org.isActive ? (
+                        <>
+                          <FiToggleRight className="w-4 h-4 mr-1.5" />
+                          Disable
+                        </>
+                      ) : (
+                        <>
+                          <FiToggleLeft className="w-4 h-4 mr-1.5" />
+                          Enable
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
-                <div className="text-sm text-gray-700 dark:text-gray-300">
-                  <p>{org.adminCount} admins, {org.employeeCount} employees</p>
-                  <p className="text-gray-600 dark:text-gray-400 mt-1">{formatDate(org.createdAt)}</p>
-                </div>
-                <div className="flex items-center gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleImpersonate(org)}
-                    className="flex-1"
-                  >
-                    <FiLogIn className="w-4 h-4 mr-1" />
-                    Impersonate
-                  </Button>
-                  <Button
-                    variant={org.isActive ? 'destructive' : 'default'}
-                    size="sm"
-                    onClick={() => {
-                      setSelectedOrg(org);
-                      setShowToggleDialog(true);
-                    }}
-                    className="flex-1"
-                  >
-                    {org.isActive ? <FiToggleRight className="w-4 h-4 mr-1" /> : <FiToggleLeft className="w-4 h-4 mr-1" />}
-                    {org.isActive ? 'Disable' : 'Enable'}
-                  </Button>
-                </div>
-              </div>
+              </CardContent>
             </Card>
           ))
         ) : (
-          <Card className="p-6">
-            <EmptyState
-              icon={FiBriefcase}
-              title="No organizations found"
-              description="No organizations match your search"
-            />
+          <Card className="rounded-xl shadow-sm">
+            <CardContent className="p-6">
+              <EmptyState
+                icon={FiBriefcase}
+                title="No organizations found"
+                description="No organizations match your search"
+              />
+            </CardContent>
           </Card>
         )}
       </div>
