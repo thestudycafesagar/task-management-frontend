@@ -9,6 +9,8 @@ import TaskModal from '@/components/TaskModal';
 import CreateTaskModal from '@/components/CreateTaskModal';
 import { CardSkeleton } from '@/components/SkeletonLoader';
 import EmptyState from '@/components/EmptyState';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import useAuthStore from '@/store/authStore';
 import apiClient from '@/lib/api';
 import { FiCheckSquare, FiFilter, FiPlus } from 'react-icons/fi';
@@ -61,44 +63,46 @@ export default function TasksPage() {
         description="Manage and track all your tasks"
         action={
           isAdmin && (
-            <button
+            <Button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+              className="gap-2"
             >
               <FiPlus className="w-5 h-5" />
               Create Task
-            </button>
+            </Button>
           )
         }
       />
 
       {/* Filters */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-        <div className="flex items-center gap-4">
-          <FiFilter className="w-5 h-5 text-gray-500" />
-          <select
-            value={filters.status}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-          >
-            <option value="">All Status</option>
-            <option value="PENDING">Pending</option>
-            <option value="IN_PROGRESS">In Progress</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="OVERDUE">Overdue</option>
-          </select>
-          <select
-            value={filters.priority}
-            onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-          >
-            <option value="">All Priority</option>
-            <option value="HIGH">High</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="LOW">Low</option>
-          </select>
-        </div>
-      </div>
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-4">
+            <FiFilter className="w-5 h-5 text-muted-foreground" />
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              className="h-10 px-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary transition-all"
+            >
+              <option value="">All Status</option>
+              <option value="PENDING">Pending</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="OVERDUE">Overdue</option>
+            </select>
+            <select
+              value={filters.priority}
+              onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
+              className="h-10 px-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary transition-all"
+            >
+              <option value="">All Priority</option>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
+            </select>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tasks Grid */}
       {isLoading ? (

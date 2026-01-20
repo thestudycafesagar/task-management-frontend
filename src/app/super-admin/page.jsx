@@ -4,9 +4,21 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import SuperAdminNavbar from '@/components/SuperAdminNavbar';
-import { TableSkeleton } from '@/components/SkeletonLoader';
+import { TableSkeleton, CardSkeleton } from '@/components/SkeletonLoader';
 import EmptyState from '@/components/EmptyState';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import useAuthStore from '@/store/authStore';
 import apiClient from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -61,131 +73,178 @@ export default function SuperAdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <SuperAdminNavbar />
       
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Organizations</h1>
-          <p className="text-gray-600">Manage all organizations on the platform</p>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 bg-primary/10 rounded-xl">
+              <FiBriefcase className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Organizations</h1>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Manage all organizations on the platform</p>
+            </div>
+          </div>
         </div>
 
         {/* Search */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-          <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search organizations..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent outline-none"
-            />
-          </div>
-        </div>
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="relative">
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search organizations..."
+                className="pl-10"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Organizations Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      {/* Organizations Table - Desktop */}
+      <Card className="hidden md:block overflow-hidden">
         {isLoading ? (
-          <div className="p-6">
+          <CardContent className="p-6">
             <TableSkeleton rows={5} />
-          </div>
+          </CardContent>
         ) : orgsData && orgsData.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Organization
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Users
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Created
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-gray-700 dark:text-gray-300">Organization</TableHead>
+                  <TableHead className="text-gray-700 dark:text-gray-300">Users</TableHead>
+                  <TableHead className="text-gray-700 dark:text-gray-300">Created</TableHead>
+                  <TableHead className="text-gray-700 dark:text-gray-300">Status</TableHead>
+                  <TableHead className="text-right text-gray-700 dark:text-gray-300">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {orgsData.map((org) => (
-                  <tr key={org._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
+                  <TableRow key={org._id}>
+                    <TableCell>
                       <div>
-                        <div className="font-medium text-gray-900">{org.name}</div>
-                        <div className="text-sm text-gray-500">/{org.slug}</div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">{org.name}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">/{org.slug}</div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">
+                    </TableCell>
+                    <TableCell className="text-gray-700 dark:text-gray-300">
                       {org.adminCount} admins, {org.employeeCount} employees
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">{formatDate(org.createdAt)}</td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full border ${
-                          org.isActive
-                            ? 'bg-green-50 text-green-600 border-green-200'
-                            : 'bg-red-50 text-red-600 border-red-200'
-                        }`}
+                    </TableCell>
+                    <TableCell className="text-gray-700 dark:text-gray-300">{formatDate(org.createdAt)}</TableCell>
+                  <TableCell>
+                    <Badge variant={org.isActive ? 'success' : 'danger'}>
+                      {org.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleImpersonate(org)}
                       >
-                        {org.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleImpersonate(org)}
-                          className="flex items-center gap-1 px-3 py-1.5 text-sm text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-colors"
-                          title="Login as Company"
-                        >
-                          <FiLogIn className="w-4 h-4" />
-                          Impersonate
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedOrg(org);
-                            setShowToggleDialog(true);
-                          }}
-                          className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                            org.isActive
-                              ? 'text-red-600 border-red-600 hover:bg-red-600 hover:text-white'
-                              : 'text-green-600 border-green-600 hover:bg-green-600 hover:text-white'
-                          }`}
-                          title={org.isActive ? 'Disable' : 'Enable'}
-                        >
-                          {org.isActive ? (
-                            <>
-                              <FiToggleRight className="w-4 h-4" />
-                              Disable
-                            </>
-                          ) : (
-                            <>
-                              <FiToggleLeft className="w-4 h-4" />
-                              Enable
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <FiLogIn className="w-4 h-4 mr-1" />
+                        Impersonate
+                      </Button>
+                      <Button
+                        variant={org.isActive ? 'destructive' : 'default'}
+                        size="sm"
+                        onClick={() => {
+                          setSelectedOrg(org);
+                          setShowToggleDialog(true);
+                        }}
+                      >
+                        {org.isActive ? (
+                          <>
+                            <FiToggleRight className="w-4 h-4 mr-1" />
+                            Disable
+                          </>
+                        ) : (
+                          <>
+                            <FiToggleLeft className="w-4 h-4 mr-1" />
+                            Enable
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
           </div>
         ) : (
-          <div className="p-6">
+          <CardContent className="p-6">
             <EmptyState
               icon={FiBriefcase}
               title="No organizations found"
-              description="Organizations will appear here once companies sign up"
+              description="No organizations match your search"
             />
-          </div>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Organizations Cards - Mobile */}
+      <div className="md:hidden space-y-4">
+        {isLoading ? (
+          <CardSkeleton />
+        ) : orgsData && orgsData.length > 0 ? (
+          orgsData.map((org) => (
+            <Card key={org._id} className="p-4">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">{org.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">/{org.slug}</p>
+                  </div>
+                  <Badge variant={org.isActive ? 'success' : 'danger'}>
+                    {org.isActive ? 'Active' : 'Inactive'}
+                  </Badge>
+                </div>
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  <p>{org.adminCount} admins, {org.employeeCount} employees</p>
+                  <p className="text-gray-600 dark:text-gray-400 mt-1">{formatDate(org.createdAt)}</p>
+                </div>
+                <div className="flex items-center gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleImpersonate(org)}
+                    className="flex-1"
+                  >
+                    <FiLogIn className="w-4 h-4 mr-1" />
+                    Impersonate
+                  </Button>
+                  <Button
+                    variant={org.isActive ? 'destructive' : 'default'}
+                    size="sm"
+                    onClick={() => {
+                      setSelectedOrg(org);
+                      setShowToggleDialog(true);
+                    }}
+                    className="flex-1"
+                  >
+                    {org.isActive ? <FiToggleRight className="w-4 h-4 mr-1" /> : <FiToggleLeft className="w-4 h-4 mr-1" />}
+                    {org.isActive ? 'Disable' : 'Enable'}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))
+        ) : (
+          <Card className="p-6">
+            <EmptyState
+              icon={FiBriefcase}
+              title="No organizations found"
+              description="No organizations match your search"
+            />
+          </Card>
         )}
       </div>
 

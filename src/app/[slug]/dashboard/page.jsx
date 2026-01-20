@@ -9,6 +9,7 @@ import TaskCard from '@/components/TaskCard';
 import TaskModal from '@/components/TaskModal';
 import { CardSkeleton } from '@/components/SkeletonLoader';
 import EmptyState from '@/components/EmptyState';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import useAuthStore from '@/store/authStore';
 import apiClient from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -86,25 +87,25 @@ export default function DashboardPage() {
       label: 'Total Tasks',
       value: statsData?.total || 0,
       icon: FiCheckSquare,
-      color: 'bg-blue-500',
+      color: 'bg-primary',
     },
     {
       label: 'In Progress',
       value: statsData?.inProgress || 0,
       icon: FiClock,
-      color: 'bg-yellow-500',
+      color: 'bg-warning',
     },
     {
       label: 'Completed',
       value: statsData?.completed || 0,
       icon: FiCheckSquare,
-      color: 'bg-green-500',
+      color: 'bg-success',
     },
     {
       label: 'Overdue',
       value: statsData?.overdue || 0,
       icon: FiAlertCircle,
-      color: 'bg-red-500',
+      color: 'bg-danger',
     },
   ];
 
@@ -127,77 +128,81 @@ export default function DashboardPage() {
       {(!isEmployee || activeTab === 'overview') && (
         <>
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <div
-                  key={index}
-                  className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {statsLoading ? '...' : stat.value}
-                      </p>
+                <Card key={index} className="hover:shadow-lg transition-all duration-200 border-0 bg-gradient-to-br from-card to-card/80">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-2">{stat.label}</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-foreground">
+                          {statsLoading ? (
+                            <span className="inline-block w-16 h-8 bg-muted animate-pulse rounded"></span>
+                          ) : (
+                            stat.value
+                          )}
+                        </p>
+                      </div>
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 ${stat.color} rounded-xl flex items-center justify-center shadow-md flex-shrink-0`}>
+                        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      </div>
                     </div>
-                    <div className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}>
-                      <Icon className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>
 
           {/* Recent Tasks */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Recent Tasks</h2>
-              <a href={`/${params.slug}/tasks`} className="text-sm text-primary hover:underline">
+          <Card className="shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between px-4 sm:px-6">
+              <CardTitle className="text-lg sm:text-xl">Recent Tasks</CardTitle>
+              <a href={`/${params.slug}/tasks`} className="text-xs sm:text-sm text-primary hover:underline font-medium">
                 View All
               </a>
-            </div>
-
-            {tasksLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3].map((i) => (
-                  <CardSkeleton key={i} />
-                ))}
-              </div>
-            ) : tasksData && tasksData.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {tasksData.map((task) => (
-                  <TaskCard
-                    key={task._id}
-                    task={task}
-                    onClick={() => handleTaskClick(task)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                icon={FiCheckSquare}
-                title="No tasks yet"
-                description="Tasks will appear here once they are created"
-              />
-            )}
-          </div>
+            </CardHeader>
+            <CardContent className="px-4 sm:px-6">
+              {tasksLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => (
+                    <CardSkeleton key={i} />
+                  ))}
+                </div>
+              ) : tasksData && tasksData.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {tasksData.map((task) => (
+                    <TaskCard
+                      key={task._id}
+                      task={task}
+                      onClick={() => handleTaskClick(task)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={FiCheckSquare}
+                  title="No tasks yet"
+                  description="Tasks will appear here once they are created"
+                />
+              )}
+            </CardContent>
+          </Card>
         </>
       )}
 
       {/* My Tasks Tab - All tasks for employee */}
       {isEmployee && activeTab === 'my-tasks' && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">All My Tasks</h2>
-            <span className="text-sm text-gray-500">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>All My Tasks</CardTitle>
+            <span className="text-sm text-muted-foreground">
               {allTasksData?.length || 0} tasks total
             </span>
-          </div>
-
-          {allTasksLoading ? (
+          </CardHeader>
+          <CardContent>
+            {allTasksLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <CardSkeleton key={i} />
@@ -220,7 +225,8 @@ export default function DashboardPage() {
               description="You don't have any tasks assigned yet"
             />
           )}
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Activity Tab - Grouped by status */}
@@ -228,134 +234,134 @@ export default function DashboardPage() {
         <div className="space-y-6">
           {/* Pending Tasks */}
           {groupedTasks.PENDING && groupedTasks.PENDING.length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                <h3 className="text-lg font-semibold text-gray-900">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-muted-foreground rounded-full"></div>
                   Pending Tasks ({groupedTasks.PENDING.length})
-                </h3>
-              </div>
-              <div className="space-y-3">
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
                 {groupedTasks.PENDING.map((task) => (
                   <div
                     key={task._id}
                     onClick={() => handleTaskClick(task)}
-                    className="p-4 border border-gray-200 rounded-lg hover:shadow-md cursor-pointer transition-shadow"
+                    className="p-4 border border-border rounded-xl hover:shadow-card cursor-pointer transition-all"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900">{task.title}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                        <h4 className="font-semibold text-foreground">{task.title}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
                       </div>
                       {task.dueDate && (
-                        <span className="text-xs text-gray-500 ml-4">
+                        <span className="text-xs text-muted-foreground ml-4">
                           Due: {formatDate(task.dueDate)}
                         </span>
                       )}
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* In Progress Tasks */}
           {groupedTasks.IN_PROGRESS && groupedTasks.IN_PROGRESS.length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                <h3 className="text-lg font-semibold text-gray-900">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-warning rounded-full"></div>
                   In Progress ({groupedTasks.IN_PROGRESS.length})
-                </h3>
-              </div>
-              <div className="space-y-3">
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
                 {groupedTasks.IN_PROGRESS.map((task) => (
                   <div
                     key={task._id}
                     onClick={() => handleTaskClick(task)}
-                    className="p-4 border border-gray-200 rounded-lg hover:shadow-md cursor-pointer transition-shadow"
+                    className="p-4 border border-border rounded-xl hover:shadow-card cursor-pointer transition-all"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900">{task.title}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                        <h4 className="font-semibold text-foreground">{task.title}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
                       </div>
                       {task.dueDate && (
-                        <span className="text-xs text-gray-500 ml-4">
+                        <span className="text-xs text-muted-foreground ml-4">
                           Due: {formatDate(task.dueDate)}
                         </span>
                       )}
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Completed Tasks */}
           {groupedTasks.COMPLETED && groupedTasks.COMPLETED.length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                <h3 className="text-lg font-semibold text-gray-900">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-success rounded-full"></div>
                   Completed ({groupedTasks.COMPLETED.length})
-                </h3>
-              </div>
-              <div className="space-y-3">
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
                 {groupedTasks.COMPLETED.map((task) => (
                   <div
                     key={task._id}
                     onClick={() => handleTaskClick(task)}
-                    className="p-4 border border-gray-200 rounded-lg hover:shadow-md cursor-pointer transition-shadow opacity-75"
+                    className="p-4 border border-border rounded-xl hover:shadow-card cursor-pointer transition-all opacity-75"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900 line-through">{task.title}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                        <h4 className="font-semibold text-foreground line-through">{task.title}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
                       </div>
                       {task.completedAt && (
-                        <span className="text-xs text-gray-500 ml-4">
+                        <span className="text-xs text-muted-foreground ml-4">
                           Completed: {formatDate(task.completedAt)}
                         </span>
                       )}
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Overdue Tasks */}
           {groupedTasks.OVERDUE && groupedTasks.OVERDUE.length > 0 && (
-            <div className="bg-white rounded-lg border border-red-200 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>
-                <h3 className="text-lg font-semibold text-red-600">
+            <Card className="border-danger/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-danger">
+                  <div className="w-3 h-3 bg-danger rounded-full animate-pulse"></div>
                   Overdue Tasks ({groupedTasks.OVERDUE.length})
-                </h3>
-              </div>
-              <div className="space-y-3">
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
                 {groupedTasks.OVERDUE.map((task) => (
                   <div
                     key={task._id}
                     onClick={() => handleTaskClick(task)}
-                    className="p-4 border border-red-200 rounded-lg hover:shadow-md cursor-pointer transition-shadow bg-red-50"
+                    className="p-4 border border-danger/30 rounded-xl hover:shadow-card cursor-pointer transition-all bg-danger/5"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900">{task.title}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                        <h4 className="font-semibold text-foreground">{task.title}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
                       </div>
                       {task.dueDate && (
-                        <span className="text-xs text-red-600 font-semibold ml-4">
+                        <span className="text-xs text-danger font-semibold ml-4">
                           Due: {formatDate(task.dueDate)}
                         </span>
                       )}
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Empty state for activity */}

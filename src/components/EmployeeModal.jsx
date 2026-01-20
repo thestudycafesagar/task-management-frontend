@@ -6,6 +6,9 @@ import apiClient from '@/lib/api';
 import useAuthStore from '@/store/authStore';
 import toast from 'react-hot-toast';
 import { FiX, FiUser, FiMail, FiLock, FiUserCheck, FiPlus, FiCheck, FiTrash2, FiShield } from 'react-icons/fi';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import ButtonLoader from './ButtonLoader';
 
 // Load custom roles from localStorage
@@ -215,29 +218,29 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
       <div className="flex min-h-screen items-center justify-center p-4">
         {/* Backdrop */}
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
           onClick={handleClose}
         ></div>
 
         {/* Modal */}
-        <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 animate-slideIn">
+        <div className="relative bg-card rounded-2xl shadow-float border border-border max-w-md w-full p-8 animate-slideIn">
           {/* Close Button */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+            className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-all"
           >
             <FiX className="w-5 h-5" />
           </button>
 
           {/* Header */}
           <div className="mb-6">
-            <div className="w-14 h-14 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center mb-4">
+            <div className="w-14 h-14 bg-gradient-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg">
               <FiUser className="w-7 h-7 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-foreground">
               {isEditMode ? 'Edit Employee' : 'Add New Employee'}
             </h2>
-            <p className="text-gray-600 mt-1">
+            <p className="text-muted-foreground mt-1">
               {isEditMode ? 'Update employee information' : 'Create an employee account for your team'}
             </p>
           </div>
@@ -246,18 +249,17 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name */}
             <div>
-              <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></span>
+              <Label className="mb-2 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
                 Full Name
-              </label>
+              </Label>
               <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"></div>
-                <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors z-10" />
-                <input
+                <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors z-10" />
+                <Input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="relative w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all font-medium"
+                  className="pl-10"
                   placeholder="John Doe"
                   disabled={isPending}
                 />
@@ -266,24 +268,23 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
 
             {/* Email */}
             <div>
-              <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></span>
+              <Label className="mb-2 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
                 Email Address
-              </label>
+              </Label>
               <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"></div>
-                <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors z-10" />
-                <input
+                <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors z-10" />
+                <Input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="relative w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all font-medium"
+                  className="pl-10"
                   placeholder="john@company.com"
                   disabled={isPending || isEditMode}
                 />
               </div>
               {isEditMode && (
-                <p className="text-xs text-gray-500 mt-1.5">
+                <p className="text-xs text-muted-foreground mt-1.5">
                   Email cannot be changed after account creation
                 </p>
               )}
@@ -291,23 +292,22 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
 
             {/* Password */}
             <div>
-              <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></span>
-                Password {isEditMode && <span className="text-xs text-gray-500 font-normal">(leave blank to keep current)</span>}
-              </label>
+              <Label className="mb-2 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                Password {isEditMode && <span className="text-xs text-muted-foreground font-normal">(leave blank to keep current)</span>}
+              </Label>
               <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"></div>
-                <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors z-10" />
-                <input
+                <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors z-10" />
+                <Input
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="relative w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all font-medium"
+                  className="pl-10"
                   placeholder={isEditMode ? "Leave blank to keep current" : "Min. 8 characters"}
                   disabled={isPending}
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
+              <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
                 <span>🔒</span>
                 <span>{isEditMode ? 'Only fill if you want to change the password' : 'Employee will use this password to login'}</span>
               </p>
@@ -315,13 +315,12 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
 
             {/* Role */}
             <div>
-              <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></span>
+              <Label className="mb-2 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
                 Role
-              </label>
+              </Label>
               <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"></div>
-                <FiUserCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors z-10" />
+                <FiUserCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors z-10" />
                 <select
                   value={formData.role}
                   onChange={(e) => {
@@ -331,29 +330,29 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
                       setFormData({ ...formData, role: e.target.value });
                     }
                   }}
-                  className="relative w-full pl-12 pr-10 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all appearance-none cursor-pointer font-medium bg-white"
+                  className="w-full h-10 pl-10 pr-10 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary transition-all appearance-none cursor-pointer"
                   disabled={isPending}
                 >
-                  <option value="EMPLOYEE" className="py-2">👤 Employee</option>
-                  <option value="ADMIN" className="py-2">👑 Admin</option>
+                  <option value="EMPLOYEE">👤 Employee</option>
+                  <option value="ADMIN">👑 Admin</option>
                   {customRoles.map((role) => (
-                    <option key={role} value={role} className="py-2">⭐ {role}</option>
+                    <option key={role} value={role}>⭐ {role}</option>
                   ))}
-                  <option value="__CREATE_NEW__" className="text-indigo-600 font-semibold py-2">
+                  <option value="__CREATE_NEW__" className="text-primary font-semibold">
                     ➕ Create New Role
                   </option>
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
-                  <svg className="w-5 h-5 text-indigo-500 group-focus-within:text-indigo-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+                  <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
               </div>
               
               {/* Existing Custom Roles - Manage */}
               {customRoles.length > 0 && (
-                <div className="mt-3 p-3 bg-gradient-to-br from-gray-50 to-indigo-50/30 rounded-xl border border-gray-200">
-                  <div className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1.5">
+                <div className="mt-3 p-3 bg-accent/50 rounded-xl border border-border">
+                  <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
                     <span>⭐</span>
                     <span>Custom Roles</span>
                   </div>
@@ -361,13 +360,13 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
                     {customRoles.map((role) => (
                       <div
                         key={role}
-                        className="group/role flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-indigo-200 rounded-lg hover:border-indigo-400 transition-all"
+                        className="group/role flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg hover:border-primary/50 transition-all"
                       >
-                        <span className="text-sm font-medium text-gray-700">{role}</span>
+                        <span className="text-sm font-medium text-foreground">{role}</span>
                         <button
                           type="button"
                           onClick={() => handleDeleteRole(role)}
-                          className="opacity-0 group-hover/role:opacity-100 p-0.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-all"
+                          className="opacity-0 group-hover/role:opacity-100 p-0.5 text-destructive hover:text-destructive hover:bg-destructive/10 rounded transition-all"
                           title="Delete role"
                         >
                           <FiTrash2 className="w-3.5 h-3.5" />
@@ -375,7 +374,7 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
                     <span>💡</span>
                     <span>Hover over a role to delete it</span>
                   </p>
@@ -384,13 +383,13 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
               
               {/* Custom Role Input */}
               {showCustomRole && (
-                <div className="mt-3 p-4 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-xl border-2 border-indigo-300 animate-slideIn shadow-lg">
-                  <label className="text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                <div className="mt-3 p-4 bg-primary/5 rounded-xl border border-primary/30 animate-slideIn">
+                  <label className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
                     <span className="text-lg">✨</span>
                     <span>Create Custom Role</span>
                   </label>
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <input
+                    <Input
                       type="text"
                       value={customRole}
                       onChange={(e) => setCustomRole(e.target.value)}
@@ -403,38 +402,38 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
                           setCustomRole('');
                         }
                       }}
-                      className="flex-1 px-4 py-2.5 border-2 border-indigo-400 rounded-lg focus:ring-4 focus:ring-indigo-200 focus:border-indigo-600 outline-none transition-all text-sm font-medium bg-white shadow-sm"
                       placeholder="e.g., Developer, Designer, Sales Manager"
                       autoFocus
                     />
                     <div className="flex gap-2">
-                      <button
+                      <Button
                         type="button"
                         onClick={handleAddCustomRole}
-                        className="flex-1 sm:flex-none px-4 py-2.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-lg font-bold hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                        className="flex-1 sm:flex-none gap-2"
                       >
                         <FiCheck className="w-4 h-4" />
                         <span>Add</span>
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="outline"
                         onClick={() => {
                           setShowCustomRole(false);
                           setCustomRole('');
                         }}
-                        className="flex-1 sm:flex-none px-4 py-2.5 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all"
+                        size="icon"
                       >
                         <FiX className="w-4 h-4" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
-                  <div className="mt-3 p-2 bg-white/60 backdrop-blur rounded-lg border border-indigo-200">
-                    <p className="text-xs text-indigo-700 font-medium flex items-center gap-1.5">
+                  <div className="mt-3 p-2 bg-background/60 rounded-lg border border-border">
+                    <p className="text-xs text-primary font-medium flex items-center gap-1.5">
                       <span>💡</span>
                       <span>Create roles like Developer, Designer, Manager, QA Tester, etc.</span>
                     </p>
-                    <p className="text-xs text-gray-600 mt-1 ml-5">
-                      Press <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs font-mono">Enter</kbd> to add • <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs font-mono">Esc</kbd> to cancel
+                    <p className="text-xs text-muted-foreground mt-1 ml-5">
+                      Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Enter</kbd> to add • <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Esc</kbd> to cancel
                     </p>
                   </div>
                 </div>
@@ -443,65 +442,65 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
 
             {/* Super Admin Force Password Change (Only when impersonating) */}
             {isEditMode && isImpersonating && (
-              <div className="mt-6 p-5 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 rounded-2xl border-2 border-amber-300">
+              <div className="mt-6 p-5 bg-warning/5 rounded-2xl border border-warning/30">
                 <div className="flex items-start gap-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <FiShield className="w-5 h-5 text-white" />
+                  <div className="w-10 h-10 bg-warning/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <FiShield className="w-5 h-5 text-warning" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                       Super Admin Powers
-                      <span className="px-2 py-0.5 bg-amber-500 text-white text-xs rounded-full font-bold">IMPERSONATING</span>
+                      <span className="px-2 py-0.5 bg-warning text-warning-foreground text-xs rounded-full font-bold">IMPERSONATING</span>
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Change password without current password verification
                     </p>
                   </div>
                 </div>
                 
                 {!showForcePasswordChange ? (
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setShowForcePasswordChange(true)}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-semibold hover:from-amber-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                    className="w-full bg-warning text-warning-foreground hover:bg-warning/90 gap-2"
                   >
                     <FiLock className="w-5 h-5" />
                     Force Change Password
-                  </button>
+                  </Button>
                 ) : (
                   <div className="space-y-3 animate-slideIn">
                     <div>
-                      <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 bg-amber-600 rounded-full"></span>
+                      <Label className="mb-2 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-warning rounded-full"></span>
                         New Password
-                      </label>
+                      </Label>
                       <div className="relative group">
-                        <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-amber-600 transition-colors z-10" />
-                        <input
+                        <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-warning transition-colors z-10" />
+                        <Input
                           type="password"
                           value={formData.password}
                           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                          className="relative w-full pl-12 pr-4 py-3.5 border-2 border-amber-200 rounded-xl focus:ring-4 focus:ring-amber-100 focus:border-amber-500 outline-none transition-all font-medium"
+                          className="pl-10 border-warning/50 focus:border-warning"
                           placeholder="Enter new password (min. 8 characters)"
                           disabled={isPending}
                         />
                       </div>
-                      <p className="text-xs text-amber-700 mt-1.5 flex items-center gap-1 bg-amber-100 px-2 py-1 rounded">
+                      <p className="text-xs text-warning mt-1.5 flex items-center gap-1 bg-warning/10 px-2 py-1 rounded">
                         <span>⚠️</span>
                         <span>No current password needed - Super Admin privilege</span>
                       </p>
                     </div>
                     
                     <div className="flex gap-2">
-                      <button
+                      <Button
                         type="button"
                         onClick={handleForcePasswordChange}
                         disabled={isPending}
-                        className="flex-1 px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-semibold hover:from-amber-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 bg-warning text-warning-foreground hover:bg-warning/90 gap-2"
                       >
                         {forcePasswordMutation.isPending ? (
                           <>
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                             <span>Changing...</span>
                           </>
                         ) : (
@@ -510,18 +509,19 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
                             <span>Change Password</span>
                           </>
                         )}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="outline"
                         onClick={() => {
                           setShowForcePasswordChange(false);
                           setFormData({ ...formData, password: '' });
                         }}
                         disabled={isPending}
-                        className="px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        size="icon"
                       >
                         <FiX className="w-5 h-5" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -530,10 +530,10 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
 
             {/* Buttons */}
             <div className="flex gap-3 pt-4">
-              <button
+              <Button
                 type="submit"
                 disabled={isPending}
-                className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                className="flex-1 gap-2"
               >
                 {isPending ? (
                   <ButtonLoader />
@@ -543,15 +543,15 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
                     {isEditMode ? 'Update Employee' : 'Create Employee'}
                   </>
                 )}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
                 onClick={handleClose}
                 disabled={isPending}
-                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </form>
         </div>

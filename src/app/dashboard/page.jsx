@@ -8,6 +8,7 @@ import TaskCard from '@/components/TaskCard';
 import TaskModal from '@/components/TaskModal';
 import { CardSkeleton } from '@/components/SkeletonLoader';
 import EmptyState from '@/components/EmptyState';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import useAuthStore from '@/store/authStore';
 import apiClient from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -50,25 +51,25 @@ export default function DashboardPage() {
       label: 'Total Tasks',
       value: statsData?.total || 0,
       icon: FiCheckSquare,
-      color: 'bg-blue-500',
+      color: 'bg-primary',
     },
     {
       label: 'In Progress',
       value: statsData?.inProgress || 0,
       icon: FiClock,
-      color: 'bg-yellow-500',
+      color: 'bg-warning',
     },
     {
       label: 'Completed',
       value: statsData?.completed || 0,
       icon: FiCheckSquare,
-      color: 'bg-green-500',
+      color: 'bg-success',
     },
     {
       label: 'Overdue',
       value: statsData?.overdue || 0,
       icon: FiAlertCircle,
-      color: 'bg-red-500',
+      color: 'bg-destructive',
     },
   ];
 
@@ -84,59 +85,62 @@ export default function DashboardPage() {
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div
+            <Card
               key={index}
-              className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+              className="hover:shadow-card transition-all duration-200"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {statsLoading ? '...' : stat.value}
-                  </p>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {statsLoading ? '...' : stat.value}
+                    </p>
+                  </div>
+                  <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center shadow-sm`}>
+                    <Icon className="w-6 h-6 text-white" />
+                  </div>
                 </div>
-                <div className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}>
-                  <Icon className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           );
         })}
       </div>
 
       {/* Recent Tasks */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Tasks</h2>
-          <a href="/tasks" className="text-sm text-primary hover:underline">
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle>Recent Tasks</CardTitle>
+          <a href="/tasks" className="text-sm text-primary hover:underline font-medium">
             View All
           </a>
-        </div>
-
-        {tasksLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <CardSkeleton key={i} />
-            ))}
-          </div>
-        ) : tasksData && tasksData.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tasksData.map((task) => (
-              <TaskCard
-                key={task._id}
-                task={task}
-                onClick={() => handleTaskClick(task)}
-              />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            icon={FiCheckSquare}
-            title="No tasks yet"
-            description="Tasks will appear here once they are created"
-          />
-        )}
-      </div>
+        </CardHeader>
+        <CardContent>
+          {tasksLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <CardSkeleton key={i} />
+              ))}
+            </div>
+          ) : tasksData && tasksData.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {tasksData.map((task) => (
+                <TaskCard
+                  key={task._id}
+                  task={task}
+                  onClick={() => handleTaskClick(task)}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={FiCheckSquare}
+              title="No tasks yet"
+              description="Tasks will appear here once they are created"
+            />
+          )}
+        </CardContent>
+      </Card>
 
       {/* Task Modal */}
       <TaskModal

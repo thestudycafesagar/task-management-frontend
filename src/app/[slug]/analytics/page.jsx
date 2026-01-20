@@ -7,6 +7,7 @@ import PageHeader from '@/components/PageHeader';
 import { CardSkeleton } from '@/components/SkeletonLoader';
 import EmptyState from '@/components/EmptyState';
 import UserAvatar from '@/components/UserAvatar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import apiClient from '@/lib/api';
 import { FiBarChart2, FiTrendingUp, FiUsers, FiCheckSquare, FiClock, FiAlertCircle, FiActivity } from 'react-icons/fi';
 
@@ -141,38 +142,38 @@ export default function AnalyticsPage() {
       label: 'Total Tasks',
       value: analytics?.totalTasks || 0,
       icon: FiActivity,
-      color: 'bg-gradient-to-br from-blue-500 to-blue-600',
-      bgColor: 'from-blue-50 to-indigo-50',
+      color: 'bg-primary',
+      bgColor: 'bg-primary/10',
     },
     {
       label: 'Completion Rate',
       value: `${analytics?.completionRate || 0}%`,
       icon: FiCheckSquare,
-      color: 'bg-gradient-to-br from-green-500 to-green-600',
-      bgColor: 'from-green-50 to-emerald-50',
+      color: 'bg-success',
+      bgColor: 'bg-success/10',
     },
     {
       label: 'Avg. Time per Task',
       value: analytics?.avgTimePerTask ? `${analytics.avgTimePerTask}h` : 'N/A',
       icon: FiClock,
-      color: 'bg-gradient-to-br from-purple-500 to-purple-600',
-      bgColor: 'from-purple-50 to-pink-50',
+      color: 'bg-purple-500',
+      bgColor: 'bg-purple-500/10',
     },
     {
       label: 'Active Employees',
       value: analytics?.activeEmployees || 0,
       icon: FiUsers,
-      color: 'bg-gradient-to-br from-orange-500 to-orange-600',
-      bgColor: 'from-orange-50 to-red-50',
+      color: 'bg-warning',
+      bgColor: 'bg-warning/10',
     },
   ];
 
   const statusDistribution = [
-    { status: 'TODO', count: analytics?.statusDistribution?.TODO || 0, color: 'bg-gray-500' },
-    { status: 'IN_PROGRESS', count: analytics?.statusDistribution?.IN_PROGRESS || 0, color: 'bg-blue-500' },
-    { status: 'UNDER_REVIEW', count: analytics?.statusDistribution?.UNDER_REVIEW || 0, color: 'bg-yellow-500' },
-    { status: 'COMPLETED', count: analytics?.statusDistribution?.COMPLETED || 0, color: 'bg-green-500' },
-    { status: 'REJECTED', count: analytics?.statusDistribution?.REJECTED || 0, color: 'bg-red-500' },
+    { status: 'TODO', count: analytics?.statusDistribution?.TODO || 0, color: 'bg-muted-foreground' },
+    { status: 'IN_PROGRESS', count: analytics?.statusDistribution?.IN_PROGRESS || 0, color: 'bg-primary' },
+    { status: 'UNDER_REVIEW', count: analytics?.statusDistribution?.UNDER_REVIEW || 0, color: 'bg-warning' },
+    { status: 'COMPLETED', count: analytics?.statusDistribution?.COMPLETED || 0, color: 'bg-success' },
+    { status: 'REJECTED', count: analytics?.statusDistribution?.REJECTED || 0, color: 'bg-danger' },
   ];
 
   const totalStatusCount = statusDistribution.reduce((sum, s) => sum + s.count, 0);
@@ -196,24 +197,24 @@ export default function AnalyticsPage() {
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div
+              <Card
                 key={index}
-                className="relative overflow-hidden bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all"
-                style={{
-                  animation: `slideUp 0.5s ease-out ${index * 0.1}s both`,
-                }}
+                className="overflow-hidden animate-in slide-in-from-bottom-4"
+                style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgColor} opacity-50`}></div>
-                <div className="relative p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center shadow-lg`}>
-                      <Icon className="w-6 h-6 text-white" />
+                <CardContent className="p-6">
+                  {/* <div className={`absolute inset-0 ${stat.bgColor} opacity-50`}></div> */}
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center shadow-card`}>
+                        <Icon className="w-6 h-6 text-white" />
+                      </div>
                     </div>
+                    <p className="text-sm text-muted-foreground mb-1 font-medium">{stat.label}</p>
+                    <p className="text-3xl font-bold text-foreground">{stat.value}</p>
                   </div>
-                  <p className="text-sm text-gray-600 mb-1 font-medium">{stat.label}</p>
-                  <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
@@ -221,161 +222,154 @@ export default function AnalyticsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Employee Performance Leaderboard */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-            <FiUsers className="text-indigo-600" />
-            Employee Performance
-          </h3>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FiUsers className="text-primary" />
+              Employee Performance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <CardSkeleton />
+            ) : (
+              <div className="space-y-4">
+                {analytics?.employeePerformance && analytics.employeePerformance.length > 0 ? (
+                  analytics.employeePerformance.slice(0, 5).map((emp, index) => (
+                    <div
+                      key={emp.userId}
+                      className="flex items-center gap-4 p-4 rounded-xl bg-muted/50 border border-border hover:shadow-card transition-all"
+                    >
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                          index === 0
+                            ? 'bg-warning text-white'
+                            : index === 1
+                            ? 'bg-muted-foreground text-white'
+                            : index === 2
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
+                      
+                      <UserAvatar user={emp.user || { name: emp.userName }} size="sm" />
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-foreground truncate">{emp.userName}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {emp.completedTasks} of {emp.totalTasks} tasks completed
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-primary">{emp.completionRate}%</div>
+                        {emp.avgTime > 0 && (
+                          <div className="text-xs text-muted-foreground">{emp.avgTime}h avg</div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <EmptyState message="No employee data available" />
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Status Distribution */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FiActivity className="text-purple-500" />
+              Task Status Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <CardSkeleton />
+            ) : (
+              <>
+                <div className="space-y-4">
+                  {statusDistribution.map((status, index) => {
+                    const percentage = totalStatusCount > 0 ? Math.round((status.count / totalStatusCount) * 100) : 0;
+                    
+                    return (
+                      <div key={status.status} className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-medium text-foreground">
+                            {status.status.replace('_', ' ')}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {status.count} ({percentage}%)
+                          </span>
+                        </div>
+                        <div className="h-3 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${status.color} rounded-full transition-all duration-500 animate-in slide-in-from-left`}
+                            style={{
+                              width: `${percentage}%`,
+                              animationDelay: `${index * 100}ms`,
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-6 pt-6 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-foreground">Total Tasks</span>
+                    <span className="text-2xl font-bold text-foreground">{totalStatusCount}</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activity Timeline */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FiClock className="text-primary" />
+            Recent Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           {isLoading ? (
             <CardSkeleton />
           ) : (
             <div className="space-y-4">
-              {analytics?.employeePerformance && analytics.employeePerformance.length > 0 ? (
-                analytics.employeePerformance.slice(0, 5).map((emp, index) => (
+              {analytics?.recentActivity && analytics.recentActivity.length > 0 ? (
+                analytics.recentActivity.map((activity, index) => (
                   <div
-                    key={emp.userId}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-gray-50 to-white border border-gray-100 hover:shadow-md transition-all"
+                    key={index}
+                    className="flex items-start gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10 hover:shadow-card transition-all"
                   >
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                        index === 0
-                          ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-white'
-                          : index === 1
-                          ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-white'
-                          : index === 2
-                          ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-white'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      {index + 1}
-                    </div>
-                    
-                    <UserAvatar user={emp.user || { name: emp.userName }} size="sm" />
-                    
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0"></div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-gray-900 truncate">{emp.userName}</div>
-                      <div className="text-sm text-gray-500">
-                        {emp.completedTasks} of {emp.totalTasks} tasks completed
+                      <div className="text-sm font-medium text-foreground">{activity.taskTitle}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Status: {activity.action} • {activity.userName}
                       </div>
                     </div>
-
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-indigo-600">{emp.completionRate}%</div>
-                      {emp.avgTime > 0 && (
-                        <div className="text-xs text-gray-500">{emp.avgTime}h avg</div>
-                      )}
+                    <div className="text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(activity.timestamp).toLocaleDateString()}
                     </div>
                   </div>
                 ))
               ) : (
-                <EmptyState message="No employee data available" />
+                <EmptyState message="No recent activity" />
               )}
             </div>
           )}
-        </div>
-
-        {/* Status Distribution */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-            <FiActivity className="text-purple-600" />
-            Task Status Distribution
-          </h3>
-          {isLoading ? (
-            <CardSkeleton />
-          ) : (
-            <>
-              <div className="space-y-4">
-                {statusDistribution.map((status, index) => {
-                  const percentage = totalStatusCount > 0 ? Math.round((status.count / totalStatusCount) * 100) : 0;
-                  
-                  return (
-                    <div key={status.status} className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium text-gray-700">
-                          {status.status.replace('_', ' ')}
-                        </span>
-                        <span className="text-gray-500">
-                          {status.count} ({percentage}%)
-                        </span>
-                      </div>
-                      <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${status.color} rounded-full transition-all duration-500`}
-                          style={{
-                            width: `${percentage}%`,
-                            animation: `expandWidth 0.8s ease-out ${index * 0.1}s both`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-gray-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-700">Total Tasks</span>
-                  <span className="text-2xl font-bold text-gray-900">{totalStatusCount}</span>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Recent Activity Timeline */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-          <FiClock className="text-blue-600" />
-          Recent Activity
-        </h3>
-        {isLoading ? (
-          <CardSkeleton />
-        ) : (
-          <div className="space-y-4">
-            {analytics?.recentActivity && analytics.recentActivity.length > 0 ? (
-              analytics.recentActivity.map((activity, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 hover:shadow-md transition-all"
-                >
-                  <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"></div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-900">{activity.taskTitle}</div>
-                    <div className="text-xs text-gray-600 mt-1">
-                      Status: {activity.action} • {activity.userName}
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500 whitespace-nowrap">
-                    {new Date(activity.timestamp).toLocaleDateString()}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <EmptyState message="No recent activity" />
-            )}
-          </div>
-        )}
-      </div>
-
-      <style jsx>{`
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes expandWidth {
-          from {
-            width: 0;
-          }
-        }
-      `}</style>
+        </CardContent>
+      </Card>
     </AppLayout>
   );
 }

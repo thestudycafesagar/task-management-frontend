@@ -10,6 +10,8 @@ import TaskModal from '@/components/TaskModal';
 import CreateTaskModal from '@/components/CreateTaskModal';
 import { CardSkeleton } from '@/components/SkeletonLoader';
 import EmptyState from '@/components/EmptyState';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import useAuthStore from '@/store/authStore';
 import apiClient from '@/lib/api';
 import { FiCheckSquare, FiFilter, FiPlus } from 'react-icons/fi';
@@ -63,54 +65,58 @@ export default function TasksPage() {
         description="Manage and track all your tasks"
         action={
           isAdmin && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] font-semibold"
-            >
-              <FiPlus className="w-5 h-5" />
+            <Button onClick={() => setShowCreateModal(true)}>
+              <FiPlus className="w-5 h-5 mr-2" />
               Create Task
-            </button>
+            </Button>
           )
         }
       />
 
       {/* Filters */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-        <div className="flex items-center gap-4">
-          <FiFilter className="w-5 h-5 text-gray-500" />
-          <select
-            value={filters.status}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-          >
-            <option value="">All Status</option>
-            <option value="PENDING">Pending</option>
-            <option value="IN_PROGRESS">In Progress</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="OVERDUE">Overdue</option>
-          </select>
-          <select
-            value={filters.priority}
-            onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-          >
-            <option value="">All Priority</option>
-            <option value="HIGH">High</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="LOW">Low</option>
-          </select>
-        </div>
-      </div>
-
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            <FiFilter className="w-5 h-5 text-muted-foreground hidden sm:block" />
+            <div className="w-full sm:w-auto">
+              <label className="text-sm font-medium text-foreground block sm:hidden mb-1">Status</label>
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                className="w-full sm:w-auto px-3 py-2 border border-border bg-card text-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+              >
+                <option value="">All Status</option>
+                <option value="PENDING">Pending</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="OVERDUE">Overdue</option>
+              </select>
+            </div>
+            <div className="w-full sm:w-auto">
+              <label className="text-sm font-medium text-foreground block sm:hidden mb-1">Priority</label>
+              <select
+                value={filters.priority}
+                onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
+                className="w-full sm:w-auto px-3 py-2 border border-border bg-card text-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+              >
+                <option value="">All Priority</option>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
+              </select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       {/* Tasks Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <CardSkeleton key={i} />
           ))}
         </div>
       ) : tasksData && tasksData.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {tasksData.map((task) => (
             <TaskCard
               key={task._id}

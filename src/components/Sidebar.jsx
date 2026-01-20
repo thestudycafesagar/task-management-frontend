@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, createContext, useContext } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -16,9 +16,33 @@ import {
   FiBriefcase,
   FiBell,
   FiTrendingUp,
-  FiList,
   FiActivity,
+  FiShield,
+  FiChevronLeft,
+  FiChevronRight,
 } from 'react-icons/fi';
+
+// Context for sharing sidebar state
+const SidebarContext = createContext({
+  isCollapsed: false,
+  setIsCollapsed: () => {},
+  isMobileOpen: false,
+  setIsMobileOpen: () => {},
+});
+
+export const useSidebar = () => useContext(SidebarContext);
+
+// Provider component to wrap AppLayout
+export function SidebarProvider({ children }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  return (
+    <SidebarContext.Provider value={{ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }}>
+      {children}
+    </SidebarContext.Provider>
+  );
+}
 
 /**
  * Sidebar navigation component
@@ -27,7 +51,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, organization, isImpersonating, hasAdminPrivileges } = useAuthStore();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen } = useSidebar();
   const [isPending, startTransition] = useTransition();
   const [loadingPath, setLoadingPath] = useState('');
 
@@ -39,13 +63,12 @@ export default function Sidebar() {
   const basePath = organization?.slug ? `/${organization.slug}` : '';
 
   const handleNavigation = (href) => {
-    // Prevent navigation if already navigating
     if (loadingPath) return;
     
     setLoadingPath(href);
     startTransition(() => {
       router.push(href);
-      // Clear loading state after navigation
+      setIsMobileOpen(false);
       setTimeout(() => setLoadingPath(''), 500);
     });
   };
@@ -54,13 +77,7 @@ export default function Sidebar() {
   // This will work for Developer, Designer, Manager, or any custom employee role
   const isEmployee = user && !hasAdminPrivileges && !isAdmin && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN';
 
-  console.log('🔍 Sidebar Debug:', {
-    userRole: user?.role,
-    isEmployee,
-    isAdmin,
-    hasAdminPrivileges,
-    isImpersonating
-  });
+  
 
   // Employee Dashboard Tabs (sub-items) - Show for any non-admin user
   const employeeDashboardTabs = isEmployee ? [
@@ -152,75 +169,84 @@ export default function Sidebar() {
     return !item.adminOnly || item.roles.includes(user?.role);
   });
   
-  console.log('🎯 Filtered items:', filteredItems.map(i => ({
-    label: i.label,
-    hasSubItems: !!i.subItems,
-    subItemsCount: i.subItems?.length || 0
-  })));
   const filteredSuperAdminItems = isSuperAdmin ? superAdminItems : [];
 
   return (
     <>
-      {/* Mobile toggle */}
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-md"
-      >
-        {isCollapsed ? <FiMenu className="w-6 h-6" /> : <FiX className="w-6 h-6" />}
-      </button>
+      {/* Mobile overlay */}
+      {isMobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-30"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
 
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 h-screen bg-white border-r border-gray-200 transition-all duration-300 z-40',
-          isCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-20' : 'translate-x-0 w-64'
+          'fixed left-0 top-0 h-screen bg-card border-r border-sidebar-border transition-all duration-300 z-40',
+          isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          isCollapsed ? 'lg:w-20' : 'lg:w-64 w-64'
         )}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="h-16 flex items-center justify-center border-b border-gray-200 px-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <FiCheckSquare className="w-5 h-5 text-white" />
+          <div className="h-16 flex items-center justify-between border-b border-sidebar-border px-4">
+            <div className="flex items-center gap-3">
+              <div className="grid size-9 place-items-center rounded-xl bg-gradient-primary shadow-soft flex-shrink-0">
+                <div className="size-4 rounded-sm bg-primary-foreground/90" />
               </div>
               {!isCollapsed && (
-                <span className="font-bold text-lg text-gray-900">TaskFlow</span>
+                <span className="font-bold text-lg text-foreground whitespace-nowrap">TaskFlow</span>
               )}
             </div>
+            {/* Mobile close button */}
+            <button
+              onClick={() => setIsMobileOpen(false)}
+              className="lg:hidden p-1.5 rounded-lg hover:bg-accent text-muted-foreground"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+            {/* Desktop collapse toggle */}
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="hidden lg:flex p-1.5 rounded-lg hover:bg-accent text-muted-foreground transition-colors"
+              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {isCollapsed ? <FiChevronRight className="w-4 h-4" /> : <FiChevronLeft className="w-4 h-4" />}
+            </button>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto py-4 px-2">
+          <nav className="flex-1 overflow-y-auto py-4 px-3">
+            {/* Workspace Label */}
+            {!isCollapsed && (
+              <div className="flex items-center gap-2 px-3 mb-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <FiShield className="w-3.5 h-3.5" />
+                <span>Workspace</span>
+              </div>
+            )}
+
             <div className="space-y-1">
               {filteredItems.map((item) => {
                 const Icon = item.icon;
-                // Check if we're on a page that belongs to this item
                 const isOnItemPage = pathname.startsWith(item.href.split('?')[0]);
                 const isLoading = loadingPath === item.href;
-                
-                // For items without sub-items, check exact match
-                // For items with sub-items, just check if we're on that section
                 const isActive = item.subItems ? false : pathname === item.href;
                 const isParentActive = item.subItems && isOnItemPage;
 
                 return (
                   <div key={item.href}>
                     <button
-                      onClick={(e) => {
-                        if (loadingPath) {
-                          e.preventDefault();
-                          return;
-                        }
-                        handleNavigation(item.href);
-                      }}
+                      onClick={() => handleNavigation(item.href)}
                       disabled={isLoading || !!loadingPath}
                       className={cn(
-                        'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
+                        'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200',
                         isActive
-                          ? 'bg-primary text-white'
+                          ? 'bg-primary text-primary-foreground shadow-soft'
                           : isParentActive
-                          ? 'bg-gray-100 text-gray-900'
-                          : 'text-gray-700 hover:bg-gray-100',
+                          ? 'bg-accent text-accent-foreground'
+                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                         isCollapsed && 'justify-center',
                         isLoading && 'opacity-60 cursor-wait'
                       )}
@@ -232,14 +258,13 @@ export default function Sidebar() {
                         <Icon className="w-5 h-5 flex-shrink-0" />
                       )}
                       {!isCollapsed && (
-                        <span className="font-medium">{item.label}</span>
+                        <span className="font-medium text-sm">{item.label}</span>
                       )}
                     </button>
 
                     {/* Sub-items for Employee Dashboard */}
                     {item.subItems && !isCollapsed && (
-                      <div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-200 pl-3">
-                        {console.log('🎨 Rendering sub-items for:', item.label, 'Count:', item.subItems.length)}
+                      <div className="ml-4 mt-1 space-y-1 border-l-2 border-border pl-3">
                         {item.subItems.map((subItem) => {
                           const SubIcon = subItem.icon;
                           // Check if this sub-item is active
@@ -260,19 +285,13 @@ export default function Sidebar() {
                           return (
                             <button
                               key={subItem.href}
-                              onClick={(e) => {
-                                if (loadingPath) {
-                                  e.preventDefault();
-                                  return;
-                                }
-                                handleNavigation(subItem.href);
-                              }}
+                              onClick={() => handleNavigation(subItem.href)}
                               disabled={isSubLoading || !!loadingPath}
                               className={cn(
-                                'w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm',
+                                'w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm',
                                 isSubActive
-                                  ? 'bg-primary text-white'
-                                  : 'text-gray-600 hover:bg-gray-100',
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                                 isSubLoading && 'opacity-60 cursor-wait'
                               )}
                             >
@@ -294,10 +313,11 @@ export default function Sidebar() {
 
             {/* Super Admin Section */}
             {filteredSuperAdminItems.length > 0 && (
-              <div className="mt-6">
+              <div className="mt-6 pt-6 border-t border-sidebar-border">
                 {!isCollapsed && (
-                  <div className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase">
-                    Super Admin
+                  <div className="flex items-center gap-2 px-3 mb-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <FiShield className="w-3.5 h-3.5" />
+                    <span>Super Admin</span>
                   </div>
                 )}
                 <div className="space-y-1">
@@ -309,19 +329,13 @@ export default function Sidebar() {
                     return (
                       <button
                         key={item.href}
-                        onClick={(e) => {
-                          if (loadingPath) {
-                            e.preventDefault();
-                            return;
-                          }
-                          handleNavigation(item.href);
-                        }}
+                        onClick={() => handleNavigation(item.href)}
                         disabled={isLoading || !!loadingPath}
                         className={cn(
-                          'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
+                          'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200',
                           isActive
-                            ? 'bg-primary text-white'
-                            : 'text-gray-700 hover:bg-gray-100',
+                            ? 'bg-primary text-primary-foreground shadow-soft'
+                            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                           isCollapsed && 'justify-center',
                           isLoading && 'opacity-60 cursor-wait'
                         )}
@@ -333,7 +347,7 @@ export default function Sidebar() {
                           <Icon className="w-5 h-5 flex-shrink-0" />
                         )}
                         {!isCollapsed && (
-                          <span className="font-medium">{item.label}</span>
+                          <span className="font-medium text-sm">{item.label}</span>
                         )}
                       </button>
                     );

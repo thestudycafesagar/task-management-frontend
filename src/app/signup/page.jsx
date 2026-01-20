@@ -4,333 +4,324 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import useAuthStore from '@/store/authStore';
-import ButtonLoader from '@/components/ButtonLoader';
 import toast from 'react-hot-toast';
-import { FiCheckSquare, FiMail, FiLock, FiUser, FiBriefcase, FiArrowRight, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiMail, FiLock, FiUser, FiBriefcase, FiEye, FiEyeOff, FiArrowRight, FiCheckCircle } from 'react-icons/fi';
 
 export default function SignupPage() {
   const router = useRouter();
   const { signup } = useAuthStore();
-  const [step, setStep] = useState(1); // 1: Company, 2: Name, 3: Email, 4: Password
+  const [showPassword, setShowPassword] = useState(false);
+  const [step, setStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  
   const [formData, setFormData] = useState({
     companyName: '',
+    email: '',
     adminName: '',
-    adminEmail: '',
     password: '',
+    confirmPassword: '',
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
-  const handleCompanySubmit = (e) => {
-    e.preventDefault();
-    
-    if (!formData.companyName.trim()) {
-      toast.error('Please enter your company name');
-      return;
+  const handleNext = () => {
+    if (step === 1) {
+      if (!formData.companyName) {
+        toast.error('Please enter your company name');
+        return;
+      }
+      setStep(2);
     }
-
-    if (formData.companyName.trim().length < 2) {
-      toast.error('Company name must be at least 2 characters');
-      return;
-    }
-
-    setStep(2);
   };
 
-  const handleNameSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.adminName.trim()) {
-      toast.error('Please enter your full name');
+
+    if (!formData.email || !formData.adminName || !formData.password) {
+      toast.error('Please fill in all fields');
       return;
     }
 
-    if (formData.adminName.trim().length < 2) {
-      toast.error('Name must be at least 2 characters');
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
       return;
     }
 
-    setStep(3);
-  };
-
-  const handleEmailSubmit = (e) => {
-    e.preventDefault();
-    
-    if (!formData.adminEmail) {
-      toast.error('Please enter your email');
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match');
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.adminEmail)) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
-
-    setStep(4);
-  };
-
-  const handlePasswordSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!formData.password) {
-      toast.error('Please enter a password');
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      toast.error('Password must be at least 8 characters');
-      return;
-    }
+    const toastId = toast.loading('Creating your account...');
 
     try {
       setIsLoading(true);
       const data = await signup(
         formData.companyName,
         formData.adminName,
-        formData.adminEmail,
+        formData.email,
         formData.password
       );
-      toast.success('🎉 Company account created successfully!');
-      router.push(data.redirectTo || '/dashboard');
+      toast.success('Account created successfully! 🎉', { id: toastId });
+      
+      setTimeout(() => {
+        router.push(data.redirectTo || '/dashboard');
+      }, 500);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Signup failed');
+      toast.error(error.response?.data?.message || 'Failed to create account', { id: toastId });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 px-4 py-12 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+    <div className="min-h-screen flex">
+      {/* Left Side - Branding */}
+      <div className="hidden lg:flex lg:flex-1 relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 items-center justify-center p-12">
+        <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]"></div>
+        <div className="relative z-10 max-w-md text-white animate-in fade-in slide-in-from-left-5 duration-1000">
+          <div className="mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-8">
+              <FiCheckCircle className="h-5 w-5 text-green-400" />
+              <span className="text-sm font-medium">Join 1000+ teams worldwide</span>
+            </div>
+          </div>
+          
+          <h2 className="text-4xl font-bold mb-6 leading-tight">
+            Start managing tasks
+            <br />
+            <span className="text-purple-200">in minutes</span>
+          </h2>
+          
+          <p className="text-lg text-purple-100 mb-8 leading-relaxed">
+            Create your account and start collaborating with your team. No credit card required.
+          </p>
+
+          <div className="space-y-4">
+            {['Setup in under 2 minutes', 'Invite unlimited team members', 'Free 14-day trial'].map((feature, index) => (
+              <div key={index} className="flex items-center gap-3 animate-in fade-in slide-in-from-left-5 duration-1000" style={{ animationDelay: `${index * 100}ms` }}>
+                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                  <FiCheckCircle className="h-5 w-5 text-green-400" />
+                </div>
+                <span className="text-purple-50">{feature}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Floating Elements */}
+          <div className="absolute top-10 left-10 w-20 h-20 bg-white/5 rounded-full blur-2xl animate-pulse"></div>
+          <div className="absolute bottom-10 right-10 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        </div>
       </div>
 
-      <div className="max-w-md w-full relative z-10">
-        {/* Logo */}
-        <div className="text-center mb-8 animate-fadeIn">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-3xl mb-4 shadow-lg transform hover:scale-110 transition-transform duration-300">
-            <FiCheckSquare className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-            Create Your Company
-          </h1>
-          <p className="text-gray-600 text-lg">Start managing tasks in minutes ⚡</p>
-        </div>
-
-        {/* Form */}
-        <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl p-8 border border-white/20 animate-slideIn">
-          {/* Progress Indicator */}
-          <div className="flex items-center justify-center mb-8 gap-2">
-            <div className={`h-2 w-12 rounded-full transition-all duration-300 ${step >= 1 ? 'bg-gradient-to-r from-indigo-600 to-purple-600' : 'bg-gray-200'}`}></div>
-            <div className={`h-2 w-12 rounded-full transition-all duration-300 ${step >= 2 ? 'bg-gradient-to-r from-indigo-600 to-purple-600' : 'bg-gray-200'}`}></div>
-            <div className={`h-2 w-12 rounded-full transition-all duration-300 ${step >= 3 ? 'bg-gradient-to-r from-indigo-600 to-purple-600' : 'bg-gray-200'}`}></div>
-            <div className={`h-2 w-12 rounded-full transition-all duration-300 ${step >= 4 ? 'bg-gradient-to-r from-indigo-600 to-purple-600' : 'bg-gray-200'}`}></div>
+      {/* Right Side - Form */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-20 xl:px-24 bg-white">
+        <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-1000">
+          {/* Logo */}
+          <div className="flex items-center justify-center mb-8">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl blur-xl opacity-50 animate-pulse"></div>
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 shadow-xl">
+                <span className="text-3xl font-bold text-white">T</span>
+              </div>
+            </div>
           </div>
 
-          {/* Step 1: Company Name */}
-          {step === 1 && (
-            <form onSubmit={handleCompanySubmit} className="space-y-6 animate-slideIn">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  What's your company name?
-                </label>
-                <div className="relative group">
-                  <FiBriefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
-                  <input
-                    type="text"
-                    value={formData.companyName}
-                    onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                    className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all bg-white/50 text-lg"
-                    placeholder="Acme Inc."
-                    autoFocus
-                  />
+          {/* Progress Steps */}
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <div className={`h-2 w-16 rounded-full transition-all duration-300 ${step >= 1 ? 'bg-gradient-to-r from-indigo-600 to-purple-600' : 'bg-gray-200'}`}></div>
+            <div className={`h-2 w-16 rounded-full transition-all duration-300 ${step >= 2 ? 'bg-gradient-to-r from-indigo-600 to-purple-600' : 'bg-gray-200'}`}></div>
+          </div>
+
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-2 animate-in fade-in slide-in-from-bottom-3 duration-700">
+              {step === 1 ? 'Create your workspace' : 'Complete your profile'}
+            </h1>
+            <p className="text-gray-600 animate-in fade-in slide-in-from-bottom-4 duration-900">
+              {step === 1 ? 'Start by naming your company' : 'Tell us a bit about yourself'}
+            </p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={step === 1 ? (e) => { e.preventDefault(); handleNext(); } : handleSubmit} className="space-y-6">
+            {step === 1 ? (
+              <>
+                {/* Company Name */}
+                <div className="group animate-in fade-in slide-in-from-bottom-5 duration-1000">
+                  <label htmlFor="companyName" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Company Name
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <FiBriefcase className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+                    </div>
+                    <input
+                      id="companyName"
+                      name="companyName"
+                      type="text"
+                      required
+                      value={formData.companyName}
+                      onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                      className="block w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all duration-200 hover:border-gray-400"
+                      placeholder="Acme Inc."
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <button
-                type="submit"
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
-              >
-                Continue
-                <FiArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </form>
-          )}
-
-          {/* Step 2: Admin Name */}
-          {step === 2 && (
-            <form onSubmit={handleNameSubmit} className="space-y-6 animate-slideIn">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  What's your full name?
-                </label>
-                <div className="relative group">
-                  <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
-                  <input
-                    type="text"
-                    value={formData.adminName}
-                    onChange={(e) => setFormData({ ...formData, adminName: e.target.value })}
-                    className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all bg-white/50 text-lg"
-                    placeholder="John Doe"
-                    autoFocus
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="flex-shrink-0 px-6 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
-                >
-                  <FiArrowLeft className="w-5 h-5" />
-                  Back
-                </button>
+                {/* Next Button */}
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
+                  className="group w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl animate-in fade-in slide-in-from-bottom-5 duration-1200"
                 >
-                  Continue
-                  <FiArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <span>Continue</span>
+                  <FiArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </button>
-              </div>
-            </form>
-          )}
-
-          {/* Step 3: Email */}
-          {step === 3 && (
-            <form onSubmit={handleEmailSubmit} className="space-y-6 animate-slideIn">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  What's your work email?
-                </label>
-                <div className="relative group">
-                  <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
-                  <input
-                    type="email"
-                    value={formData.adminEmail}
-                    onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
-                    className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all bg-white/50 text-lg"
-                    placeholder="john@company.com"
-                    autoFocus
-                    autoComplete="email"
-                  />
+              </>
+            ) : (
+              <>
+                {/* Admin Name */}
+                <div className="group animate-in fade-in slide-in-from-bottom-5 duration-1000">
+                  <label htmlFor="adminName" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <FiUser className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+                    </div>
+                    <input
+                      id="adminName"
+                      name="adminName"
+                      type="text"
+                      required
+                      value={formData.adminName}
+                      onChange={(e) => setFormData({ ...formData, adminName: e.target.value })}
+                      className="block w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all duration-200 hover:border-gray-400"
+                      placeholder="John Doe"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setStep(2)}
-                  className="flex-shrink-0 px-6 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
-                >
-                  <FiArrowLeft className="w-5 h-5" />
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
-                >
-                  Continue
-                  <FiArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
-              </div>
-            </form>
-          )}
+                {/* Email */}
+                <div className="group animate-in fade-in slide-in-from-bottom-5 duration-1100">
+                  <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <FiMail className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+                    </div>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="block w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all duration-200 hover:border-gray-400"
+                      placeholder="john@company.com"
+                    />
+                  </div>
+                </div>
 
-          {/* Step 4: Password */}
-          {step === 4 && (
-            <form onSubmit={handlePasswordSubmit} className="space-y-6 animate-slideIn">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Create a secure password
-                </label>
-                <div className="relative group">
-                  <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full pl-12 pr-12 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all bg-white/50 text-lg"
-                    placeholder="Min. 8 characters"
-                    autoFocus
-                    disabled={isLoading}
-                    autoComplete="new-password"
-                  />
+                {/* Password */}
+                <div className="group animate-in fade-in slide-in-from-bottom-5 duration-1200">
+                  <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <FiLock className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+                    </div>
+                    <input
+                      id="password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      required
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="block w-full pl-12 pr-12 py-3.5 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all duration-200 hover:border-gray-400"
+                      placeholder="Minimum 6 characters"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {showPassword ? <FiEyeOff className="h-5 w-5" /> : <FiEye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div className="group animate-in fade-in slide-in-from-bottom-5 duration-1300">
+                  <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <FiLock className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+                    </div>
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      required
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      className="block w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all duration-200 hover:border-gray-400"
+                      placeholder="Re-enter password"
+                    />
+                  </div>
+                </div>
+
+                {/* Back & Submit Buttons */}
+                <div className="flex gap-3">
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    tabIndex={-1}
+                    onClick={() => setStep(1)}
+                    className="flex-1 px-6 py-3.5 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200"
                   >
-                    {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                    Back
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="group flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    {isLoading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Creating account...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Create Account</span>
+                        <FiArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">Password must be at least 8 characters</p>
-              </div>
+              </>
+            )}
+          </form>
 
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setStep(3)}
-                  disabled={isLoading}
-                  className="flex-shrink-0 px-6 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  <FiArrowLeft className="w-5 h-5" />
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
-                >
-                  {isLoading ? (
-                    <ButtonLoader />
-                  ) : (
-                    <>
-                      Create Account
-                      <FiArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t-2 border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500 font-medium">Already have an account?</span>
-            </div>
+          {/* Sign In Link */}
+          <div className="mt-8 text-center animate-in fade-in duration-1400">
+            <span className="text-gray-600">Already have an account? </span>
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-700 font-semibold transition-colors"
+            >
+              Sign in
+              <FiArrowRight className="h-4 w-4" />
+            </Link>
           </div>
-
-          {/* Login Link */}
-          <Link
-            href="/login"
-            className="block w-full text-center py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all transform hover:scale-[1.02]"
-          >
-            Sign In
-          </Link>
         </div>
-
-        {/* Footer */}
-        <p className="text-center text-sm text-gray-600 mt-6 animate-fadeIn">
-          By signing up, you agree to our{' '}
-          <Link href="#" className="text-indigo-600 hover:underline">
-            Terms
-          </Link>{' '}
-          and{' '}
-          <Link href="#" className="text-indigo-600 hover:underline">
-            Privacy Policy
-          </Link>
-        </p>
       </div>
     </div>
   );

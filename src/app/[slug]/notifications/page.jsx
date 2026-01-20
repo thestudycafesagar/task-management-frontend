@@ -5,6 +5,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import useNotificationStore from '@/store/notificationStore';
 import apiClient from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -140,19 +143,19 @@ export default function NotificationsPage() {
   };
 
   const getNotificationBgColor = (type, isRead) => {
-    if (isRead) return 'bg-gray-50';
+    if (isRead) return 'bg-muted';
     
     switch (type) {
       case 'TASK_ASSIGNED':
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-primary/10 border-primary/30';
       case 'TASK_UPDATED':
-        return 'bg-amber-50 border-amber-200';
+        return 'bg-warning/10 border-warning/30';
       case 'TASK_COMPLETED':
-        return 'bg-green-50 border-green-200';
+        return 'bg-success/10 border-success/30';
       case 'TASK_OVERDUE':
-        return 'bg-red-50 border-red-200';
+        return 'bg-danger/10 border-danger/30';
       default:
-        return 'bg-gray-50';
+        return 'bg-muted';
     }
   };
 
@@ -162,15 +165,17 @@ export default function NotificationsPage() {
         <PageHeader title="Notifications" description="Stay updated with your tasks" />
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-white rounded-lg border border-gray-200 p-4 animate-pulse">
-              <div className="flex gap-4">
-                <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-4">
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 bg-muted rounded-full"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </AppLayout>
@@ -185,168 +190,163 @@ export default function NotificationsPage() {
         action={
           notifications.length > 0 && (
             <div className="flex items-center gap-2">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => markAllAsReadMutation.mutate()}
                 disabled={markAllAsReadMutation.isPending}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
-                <FiCheck className="w-4 h-4" />
+                <FiCheck className="w-4 h-4 mr-2" />
                 Mark All Read
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="destructive"
                 onClick={() => clearAllMutation.mutate()}
                 disabled={clearAllMutation.isPending}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
               >
-                <FiTrash2 className="w-4 h-4" />
+                <FiTrash2 className="w-4 h-4 mr-2" />
                 Clear All
-              </button>
+              </Button>
             </div>
           )
         }
       />
 
       {/* Filters */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <FiFilter className="w-5 h-5 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">Filters:</span>
-          </div>
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <FiFilter className="w-5 h-5 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Filters:</span>
+            </div>
 
-          {/* Status Filter */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                filter === 'all'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              All ({notifications.length})
-            </button>
-            <button
-              onClick={() => setFilter('unread')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                filter === 'unread'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Unread ({notifications.filter(n => !n.isRead).length})
-            </button>
-            <button
-              onClick={() => setFilter('read')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                filter === 'read'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Read ({notifications.filter(n => n.isRead).length})
-            </button>
-          </div>
+            {/* Status Filter */}
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant={filter === 'all' ? 'default' : 'secondary'}
+                onClick={() => setFilter('all')}
+              >
+                All ({notifications.length})
+              </Button>
+              <Button
+                size="sm"
+                variant={filter === 'unread' ? 'default' : 'secondary'}
+                onClick={() => setFilter('unread')}
+              >
+                Unread ({notifications.filter(n => !n.isRead).length})
+              </Button>
+              <Button
+                size="sm"
+                variant={filter === 'read' ? 'default' : 'secondary'}
+                onClick={() => setFilter('read')}
+              >
+                Read ({notifications.filter(n => n.isRead).length})
+              </Button>
+            </div>
 
-          {/* Type Filter */}
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
-          >
-            <option value="all">All Types</option>
-            <option value="TASK_ASSIGNED">Task Assigned</option>
-            <option value="TASK_UPDATED">Task Updated</option>
-            <option value="TASK_COMPLETED">Task Completed</option>
-            <option value="TASK_OVERDUE">Task Overdue</option>
-          </select>
-        </div>
-      </div>
+            {/* Type Filter */}
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="px-4 py-2 border border-border bg-card text-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm"
+            >
+              <option value="all">All Types</option>
+              <option value="TASK_ASSIGNED">Task Assigned</option>
+              <option value="TASK_UPDATED">Task Updated</option>
+              <option value="TASK_COMPLETED">Task Completed</option>
+              <option value="TASK_OVERDUE">Task Overdue</option>
+            </select>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Notifications List */}
       <div className="space-y-3">
         {filteredNotifications.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FiBell className="w-8 h-8 text-gray-400" />
+          <Card className="p-12 text-center">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <FiBell className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No notifications</h3>
-            <p className="text-gray-500">
+            <h3 className="text-lg font-semibold text-foreground mb-2">No notifications</h3>
+            <p className="text-muted-foreground">
               {filter === 'unread'
                 ? "You're all caught up! No unread notifications."
                 : filter === 'read'
                 ? 'No read notifications yet.'
                 : 'You have no notifications at this time.'}
             </p>
-          </div>
+          </Card>
         ) : (
           filteredNotifications.map((notification) => (
-            <div
+            <Card
               key={notification._id}
               onClick={() => handleNotificationClick(notification)}
               className={`
-                relative bg-white rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md group
+                cursor-pointer transition-all hover:shadow-card group
                 ${getNotificationBgColor(notification.type, notification.isRead)}
-                ${!notification.isRead ? 'border-l-4' : 'border-gray-200'}
+                ${!notification.isRead ? 'border-l-4' : ''}
               `}
             >
-              <div className="flex gap-4">
-                {/* Icon */}
-                <div className="flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center">
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4 mb-2">
-                    <p className={`text-sm ${!notification.isRead ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
-                      {notification.message}
-                    </p>
-                    {!notification.isRead && (
-                      <span className="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full"></span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <FiClock className="w-3 h-3" />
-                      {formatDateTime(notification.createdAt)}
+              <CardContent className="p-4">
+                <div className="flex gap-4">
+                  {/* Icon */}
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-card shadow-soft flex items-center justify-center">
+                      {getNotificationIcon(notification.type)}
                     </div>
-                    <span className="px-2 py-0.5 bg-white rounded-full text-xs font-medium border border-gray-200">
-                      {notification.type.replace('_', ' ')}
-                    </span>
                   </div>
-                </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {!notification.isRead && (
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                      <p className={`text-sm ${!notification.isRead ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                        {notification.message}
+                      </p>
+                      {!notification.isRead && (
+                        <span className="flex-shrink-0 w-2 h-2 bg-primary rounded-full"></span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <FiClock className="w-3 h-3" />
+                        {formatDateTime(notification.createdAt)}
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        {notification.type.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {!notification.isRead && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markAsReadMutation.mutate(notification._id);
+                        }}
+                        className="p-2 hover:bg-card rounded-lg transition-colors"
+                        title="Mark as read"
+                      >
+                        <FiCheck className="w-4 h-4 text-success" />
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        markAsReadMutation.mutate(notification._id);
+                        deleteNotificationMutation.mutate(notification._id);
                       }}
-                      className="p-2 hover:bg-white rounded-lg transition-colors"
-                      title="Mark as read"
+                      className="p-2 hover:bg-card rounded-lg transition-colors"
+                      title="Delete"
                     >
-                      <FiCheck className="w-4 h-4 text-green-600" />
+                      <FiTrash2 className="w-4 h-4 text-danger" />
                     </button>
-                  )}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteNotificationMutation.mutate(notification._id);
-                    }}
-                    className="p-2 hover:bg-white rounded-lg transition-colors"
-                    title="Delete"
-                  >
-                    <FiTrash2 className="w-4 h-4 text-red-600" />
-                  </button>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))
         )}
       </div>

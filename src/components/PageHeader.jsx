@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils';
 
 /**
- * Page header component
+ * Page header component with modern styling
  */
 export default function PageHeader({ 
   title, 
@@ -12,16 +12,16 @@ export default function PageHeader({
   className 
 }) {
   return (
-    <div className={cn('mb-6', className)}>
-      <div className="flex items-center justify-between">
+    <header className={cn('mb-6', className)}>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
           {description && (
-            <p className="text-gray-600 mt-1">{description}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
           )}
         </div>
-        {action && <div>{action}</div>}
+        {action && <div className="flex items-center gap-2">{action}</div>}
       </div>
-    </div>
+    </header>
   );
 }

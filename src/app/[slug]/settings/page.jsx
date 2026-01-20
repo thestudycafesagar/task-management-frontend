@@ -5,6 +5,11 @@ import { useParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import useAuthStore from '@/store/authStore';
 import apiClient from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -40,10 +45,10 @@ export default function SettingsPage() {
         description={isEmployee ? "Manage your notification preferences" : "Manage your account and preferences"}
       />
 
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
         {/* Sidebar */}
         <div className="lg:w-64 flex-shrink-0">
-          <div className="bg-white rounded-2xl border border-gray-200 p-2">
+          <Card className="p-2">
             <nav className="space-y-1">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -51,19 +56,19 @@ export default function SettingsPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    className={`w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-all text-sm sm:text-base ${
                       activeTab === tab.id
-                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                        : 'text-gray-700 hover:bg-gray-50'
+                        ? 'bg-primary text-primary-foreground shadow-soft'
+                        : 'text-foreground hover:bg-muted'
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                     <span className="font-medium">{tab.label}</span>
                   </button>
                 );
               })}
             </nav>
-          </div>
+          </Card>
         </div>
 
         {/* Content */}
@@ -90,105 +95,95 @@ function ProfileSettings({ user }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Profile Information</h2>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Full Name
-          </label>
-          <div className="relative">
-            <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all"
-              placeholder="Your name"
-            />
+    <Card>
+      <CardHeader>
+        <CardTitle>Profile Information</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label>Full Name</Label>
+            <div className="relative">
+              <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="pl-12"
+                placeholder="Your name"
+              />
+            </div>
           </div>
-        </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Email Address
-          </label>
-          <div className="relative">
-            <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all"
-              placeholder="your@email.com"
-            />
+          <div className="space-y-2">
+            <Label>Email Address</Label>
+            <div className="relative">
+              <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="pl-12"
+                placeholder="your@email.com"
+              />
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3 pt-4">
-          <button
-            type="submit"
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
-          >
-            <FiSave className="w-5 h-5" />
-            Save Changes
-          </button>
-          <button
-            type="button"
-            className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
+          <div className="flex items-center gap-3 pt-4">
+            <Button type="submit">
+              <FiSave className="w-5 h-5 mr-2" />
+              Save Changes
+            </Button>
+            <Button type="button" variant="outline">
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
 
 function CompanySettings({ organization }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Company Information</h2>
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Company Name
-          </label>
+    <Card>
+      <CardHeader>
+        <CardTitle>Company Information</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <Label>Company Name</Label>
           <div className="relative">
-            <FiBriefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
+            <FiBriefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
               type="text"
               value={organization?.name || ''}
               readOnly
-              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-600"
+              className="pl-12 bg-muted"
             />
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Company Slug
-          </label>
+        <div className="space-y-2">
+          <Label>Company Slug</Label>
           <div className="flex items-center gap-2">
-            <code className="px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-700 font-mono text-sm flex-1">
+            <code className="px-4 py-3 bg-muted border border-border rounded-xl text-foreground font-mono text-sm flex-1">
               /{organization?.slug || 'your-company'}
             </code>
           </div>
-          <p className="text-xs text-gray-500 mt-2">This is your unique company identifier in URLs</p>
+          <p className="text-xs text-muted-foreground">This is your unique company identifier in URLs</p>
         </div>
 
-        <div className="pt-4 border-t border-gray-200">
-          <p className="text-sm text-gray-600">
-            <strong>Status:</strong>{' '}
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              organization?.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}>
+        <div className="pt-4 border-t border-border">
+          <p className="text-sm text-muted-foreground">
+            <strong className="text-foreground">Status:</strong>{' '}
+            <Badge variant={organization?.isActive ? 'success' : 'danger'}>
               {organization?.isActive ? 'Active' : 'Inactive'}
-            </span>
+            </Badge>
           </p>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -276,165 +271,168 @@ function NotificationSettings() {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-200 p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-          <div className="space-y-3">
-            <div className="h-16 bg-gray-100 rounded-xl"></div>
-            <div className="h-16 bg-gray-100 rounded-xl"></div>
-            <div className="h-16 bg-gray-100 rounded-xl"></div>
+      <Card>
+        <CardContent className="p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-6 bg-muted rounded w-1/3"></div>
+            <div className="space-y-3">
+              <div className="h-16 bg-muted rounded-xl"></div>
+              <div className="h-16 bg-muted rounded-xl"></div>
+              <div className="h-16 bg-muted rounded-xl"></div>
+            </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Notification Preferences</h2>
-      
-      {/* Push Notification Status Banner */}
-      {typeof window !== 'undefined' && 'Notification' in window && (
-        <div className={`mb-6 p-4 rounded-xl border-2 ${
-          pushEnabled 
-            ? 'bg-green-50 border-green-200' 
-            : 'bg-amber-50 border-amber-200'
-        }`}>
-          <div className="flex items-start gap-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              pushEnabled ? 'bg-green-100' : 'bg-amber-100'
-            }`}>
-              <FiBell className={`w-5 h-5 ${pushEnabled ? 'text-green-600' : 'text-amber-600'}`} />
+    <Card>
+      <CardHeader>
+        <CardTitle>Notification Preferences</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Push Notification Status Banner */}
+        {typeof window !== 'undefined' && 'Notification' in window && (
+          <div className={`mb-6 p-4 rounded-xl border-2 ${
+            pushEnabled 
+              ? 'bg-success/10 border-success/30' 
+              : 'bg-warning/10 border-warning/30'
+          }`}>
+            <div className="flex items-start gap-3">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                pushEnabled ? 'bg-success/20' : 'bg-warning/20'
+              }`}>
+                <FiBell className={`w-5 h-5 ${pushEnabled ? 'text-success' : 'text-warning'}`} />
+              </div>
+              <div className="flex-1">
+                <h3 className={`font-semibold ${pushEnabled ? 'text-success' : 'text-warning'}`}>
+                  {pushEnabled ? '✅ Push Notifications Enabled' : '⚠️ Push Notifications Disabled'}
+                </h3>
+                <p className={`text-sm mt-1 ${pushEnabled ? 'text-success/80' : 'text-warning/80'}`}>
+                  {pushEnabled 
+                    ? 'You will receive notifications on this device, even when the app is closed.'
+                    : 'Enable push notifications to receive alerts on your mobile phone and desktop.'}
+                </p>
+                {!pushEnabled && (
+                  <Button
+                    onClick={handleEnablePush}
+                    disabled={isRequestingPermission}
+                    className="mt-3"
+                    size="sm"
+                  >
+                    {isRequestingPermission ? 'Requesting...' : '🔔 Enable Push Notifications'}
+                  </Button>
+                )}
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className={`font-semibold ${pushEnabled ? 'text-green-900' : 'text-amber-900'}`}>
-                {pushEnabled ? '✅ Push Notifications Enabled' : '⚠️ Push Notifications Disabled'}
-              </h3>
-              <p className={`text-sm mt-1 ${pushEnabled ? 'text-green-700' : 'text-amber-700'}`}>
-                {pushEnabled 
-                  ? 'You will receive notifications on this device, even when the app is closed.'
-                  : 'Enable push notifications to receive alerts on your mobile phone and desktop.'}
-              </p>
-              {!pushEnabled && (
-                <button
-                  onClick={handleEnablePush}
-                  disabled={isRequestingPermission}
-                  className="mt-3 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md disabled:opacity-50"
-                >
-                  {isRequestingPermission ? 'Requesting...' : '🔔 Enable Push Notifications'}
-                </button>
-              )}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 rounded-xl hover:bg-muted transition-colors">
+            <div>
+              <p className="font-medium text-foreground">Email Notifications</p>
+              <p className="text-sm text-muted-foreground">Receive notifications via email</p>
             </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={notifications.emailNotifications}
+                onChange={() => handleToggle('emailNotifications')}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-muted peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
           </div>
-        </div>
-      )}
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors">
-          <div>
-            <p className="font-medium text-gray-900">Email Notifications</p>
-            <p className="text-sm text-gray-500">Receive notifications via email</p>
+          <div className="flex items-center justify-between p-4 rounded-xl hover:bg-muted transition-colors">
+            <div>
+              <p className="font-medium text-foreground">Push Notifications</p>
+              <p className="text-sm text-muted-foreground">Receive push notifications on your device</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={notifications.pushNotifications}
+                onChange={() => handleToggle('pushNotifications')}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-muted peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={notifications.emailNotifications}
-              onChange={() => handleToggle('emailNotifications')}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-indigo-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-          </label>
-        </div>
 
-        <div className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors">
-          <div>
-            <p className="font-medium text-gray-900">Push Notifications</p>
-            <p className="text-sm text-gray-500">Receive push notifications on your device</p>
+          <div className="flex items-center justify-between p-4 rounded-xl hover:bg-muted transition-colors">
+            <div>
+              <p className="font-medium text-foreground">Task Assigned</p>
+              <p className="text-sm text-muted-foreground">When a task is assigned to you</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={notifications.taskAssigned}
+                onChange={() => handleToggle('taskAssigned')}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-muted peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={notifications.pushNotifications}
-              onChange={() => handleToggle('pushNotifications')}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-indigo-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-          </label>
-        </div>
 
-        <div className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors">
-          <div>
-            <p className="font-medium text-gray-900">Task Assigned</p>
-            <p className="text-sm text-gray-500">When a task is assigned to you</p>
+          <div className="flex items-center justify-between p-4 rounded-xl hover:bg-muted transition-colors">
+            <div>
+              <p className="font-medium text-foreground">Task Updated</p>
+              <p className="text-sm text-muted-foreground">When a task you're working on is updated</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={notifications.taskUpdated}
+                onChange={() => handleToggle('taskUpdated')}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-muted peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={notifications.taskAssigned}
-              onChange={() => handleToggle('taskAssigned')}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-indigo-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-          </label>
-        </div>
 
-        <div className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors">
-          <div>
-            <p className="font-medium text-gray-900">Task Updated</p>
-            <p className="text-sm text-gray-500">When a task you're working on is updated</p>
+          <div className="flex items-center justify-between p-4 rounded-xl hover:bg-muted transition-colors">
+            <div>
+              <p className="font-medium text-foreground">Task Completed</p>
+              <p className="text-sm text-muted-foreground">When a task is marked as completed</p>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={notifications.taskUpdated}
-              onChange={() => handleToggle('taskUpdated')}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-indigo-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-          </label>
-        </div>
-
-        <div className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors">
-          <div>
-            <p className="font-medium text-gray-900">Task Completed</p>
-            <p className="text-sm text-gray-500">When a task is marked as completed</p>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+            <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
               checked={notifications.taskCompleted}
               onChange={() => handleToggle('taskCompleted')}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-indigo-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+            <div className="w-11 h-6 bg-muted peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
           </label>
         </div>
       </div>
 
-      <div className="mt-6 pt-4 border-t border-gray-200">
-        <button
+      <div className="mt-6 pt-4 border-t border-border">
+        <Button
           onClick={handleSave}
           disabled={updateSettingsMutation.isPending}
-          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {updateSettingsMutation.isPending ? (
             <>
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
               Saving...
             </>
           ) : (
             <>
-              <FiSave className="w-5 h-5" />
+              <FiSave className="w-5 h-5 mr-2" />
               Save Preferences
             </>
           )}
-        </button>
+        </Button>
       </div>
-    </div>
+      </CardContent>
+    </Card>
   );
-}
-
-function SecuritySettings() {
+}function SecuritySettings() {
   const queryClient = useQueryClient();
   const { user, isImpersonating, organization } = useAuthStore();
   const [passwords, setPasswords] = useState({
@@ -541,116 +539,112 @@ function SecuritySettings() {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Security Settings</h2>
-      
-      {/* Super Admin Badge */}
-      {isImpersonating && (
-        <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl">
-          <div className="flex items-center gap-2 text-amber-800">
-            <FiShield className="w-5 h-5" />
-            <span className="font-semibold">Super Admin Mode - Current password not required</span>
+    <Card>
+      <CardHeader>
+        <CardTitle>Security Settings</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Super Admin Badge */}
+        {isImpersonating && (
+          <div className="mb-6 p-4 bg-warning/10 border-2 border-warning/30 rounded-xl">
+            <div className="flex items-center gap-2 text-warning">
+              <FiShield className="w-5 h-5" />
+              <span className="font-semibold">Super Admin Mode - Current password not required</span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <form onSubmit={handlePasswordChange} className="space-y-6">
-        {/* Current Password - Only show if NOT impersonating */}
-        {!isImpersonating && (
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Current Password
-            </label>
+        <form onSubmit={handlePasswordChange} className="space-y-6">
+          {/* Current Password - Only show if NOT impersonating */}
+          {!isImpersonating && (
+            <div className="space-y-2">
+              <Label>Current Password</Label>
+              <div className="relative">
+                <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  type={showPasswords.current ? "text" : "password"}
+                  value={passwords.currentPassword}
+                  onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })}
+                  className="pl-12 pr-12"
+                  placeholder="••••••••"
+                  disabled={changePasswordMutation.isPending}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPasswords.current ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label>New Password</Label>
             <div className="relative">
-              <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type={showPasswords.current ? "text" : "password"}
-                value={passwords.currentPassword}
-                onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })}
-                className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all"
+              <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                type={showPasswords.new ? "text" : "password"}
+                value={passwords.newPassword}
+                onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
+                className="pl-12 pr-12"
                 placeholder="••••••••"
                 disabled={changePasswordMutation.isPending}
               />
               <button
                 type="button"
-                onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                {showPasswords.current ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                {showPasswords.new ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">Minimum 8 characters</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Confirm New Password</Label>
+            <div className="relative">
+              <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                type={showPasswords.confirm ? "text" : "password"}
+                value={passwords.confirmPassword}
+                onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                className="pl-12 pr-12"
+                placeholder="••••••••"
+                disabled={changePasswordMutation.isPending}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPasswords.confirm ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
               </button>
             </div>
           </div>
-        )}
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            New Password
-          </label>
-          <div className="relative">
-            <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type={showPasswords.new ? "text" : "password"}
-              value={passwords.newPassword}
-              onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
-              className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all"
-              placeholder="••••••••"
+          <div className="pt-4">
+            <Button
+              type="submit"
               disabled={changePasswordMutation.isPending}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
-              {showPasswords.new ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
-            </button>
+              {changePasswordMutation.isPending ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  Changing...
+                </>
+              ) : (
+                <>
+                  <FiSave className="w-5 h-5 mr-2" />
+                  Change Password
+                </>
+              )}
+            </Button>
           </div>
-          <p className="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Confirm New Password
-          </label>
-          <div className="relative">
-            <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type={showPasswords.confirm ? "text" : "password"}
-              value={passwords.confirmPassword}
-              onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-              className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all"
-              placeholder="••••••••"
-              disabled={changePasswordMutation.isPending}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              {showPasswords.confirm ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
-
-        <div className="pt-4">
-          <button
-            type="submit"
-            disabled={changePasswordMutation.isPending}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {changePasswordMutation.isPending ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Changing...
-              </>
-            ) : (
-              <>
-                <FiSave className="w-5 h-5" />
-                Change Password
-              </>
-            )}
-          </button>
-        </div>
-      </form>
-    </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

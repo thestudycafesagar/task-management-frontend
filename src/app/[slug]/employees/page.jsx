@@ -6,10 +6,21 @@ import { useQuery } from '@tanstack/react-query';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
 import EmployeeModal from '@/components/EmployeeModal';
-import { TableSkeleton } from '@/components/SkeletonLoader';
+import { TableSkeleton, CardSkeleton } from '@/components/SkeletonLoader';
 import EmptyState from '@/components/EmptyState';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import apiClient from '@/lib/api';
-import { FiUsers, FiPlus } from 'react-icons/fi';
+import { FiUsers, FiPlus, FiEdit2 } from 'react-icons/fi';
 
 export default function EmployeesPage() {
   const params = useParams();
@@ -35,98 +46,131 @@ export default function EmployeesPage() {
     setSelectedEmployee(null);
   };
 
+  const getRoleBadgeVariant = (role) => {
+    switch (role) {
+      case 'ADMIN':
+        return 'default';
+      case 'EMPLOYEE':
+        return 'secondary';
+      default:
+        return 'secondary';
+    }
+  };
+
   return (
     <AppLayout>
       <PageHeader
         title="Employees"
         description="Manage your team members"
         action={
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] font-semibold"
-          >
-            <FiPlus className="w-5 h-5" />
+          <Button onClick={() => setShowModal(true)}>
+            <FiPlus className="w-5 h-5 mr-2" />
             Add Employee
-          </button>
+          </Button>
         }
       />
 
-      {/* Employees Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      {/* Employees Table - Desktop */}
+      <Card className="hidden md:block">
         {isLoading ? (
-          <div className="p-6">
+          <CardContent className="p-6">
             <TableSkeleton rows={5} />
-          </div>
+          </CardContent>
         ) : employeesData && employeesData.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Role
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {employeesData.map((employee) => (
-                  <tr key={employee._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">{employee.name}</div>
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">{employee.email}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-600 border border-blue-200">
-                        {employee.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full border ${
-                          employee.isActive
-                            ? 'bg-green-50 text-green-600 border-green-200'
-                            : 'bg-red-50 text-red-600 border-red-200'
-                        }`}
-                      >
-                        {employee.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleEdit(employee)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-indigo-600 hover:text-indigo-700 border border-indigo-200 hover:border-indigo-300 rounded-lg hover:bg-indigo-50 transition-all font-medium"
-                        title="Edit Employee"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {employeesData.map((employee) => (
+                <TableRow key={employee._id}>
+                  <TableCell className="font-medium text-foreground">
+                    {employee.name}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {employee.email}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getRoleBadgeVariant(employee.role)}>
+                      {employee.role}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={employee.isActive ? 'success' : 'danger'}>
+                      {employee.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(employee)}
+                    >
+                      <FiEdit2 className="w-4 h-4 mr-1" />
+                      Edit
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         ) : (
-          <div className="p-6">
+          <CardContent className="p-6">
             <EmptyState
               icon={FiUsers}
               title="No employees yet"
               description="Add employees to start assigning tasks"
             />
-          </div>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Employees Cards - Mobile */}
+      <div className="md:hidden space-y-4">
+        {isLoading ? (
+          <CardSkeleton />
+        ) : employeesData && employeesData.length > 0 ? (
+          employeesData.map((employee) => (
+            <Card key={employee._id} className="p-4">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">{employee.name}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">{employee.email}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(employee)}
+                  >
+                    <FiEdit2 className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={getRoleBadgeVariant(employee.role)}>
+                    {employee.role}
+                  </Badge>
+                  <Badge variant={employee.isActive ? 'success' : 'danger'}>
+                    {employee.isActive ? 'Active' : 'Inactive'}
+                  </Badge>
+                </div>
+              </div>
+            </Card>
+          ))
+        ) : (
+          <Card className="p-6">
+            <EmptyState
+              icon={FiUsers}
+              title="No employees yet"
+              description="Add employees to start assigning tasks"
+            />
+          </Card>
         )}
       </div>
 

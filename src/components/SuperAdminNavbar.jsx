@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import useAuthStore from '@/store/authStore';
+import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
 import { FiShield, FiLogOut } from 'react-icons/fi';
 
@@ -20,7 +21,7 @@ export default function SuperAdminNavbar() {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-purple-900 to-violet-900 border-b border-purple-700 shadow-lg">
+    <nav className="gradient-primary border-b border-primary/20 shadow-card">
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo and Title */}
@@ -30,7 +31,7 @@ export default function SuperAdminNavbar() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-white">Super Admin Portal</h1>
-              <p className="text-xs text-purple-200">Platform Management</p>
+              <p className="text-xs text-white/70">Platform Management</p>
             </div>
           </div>
 
@@ -38,15 +39,16 @@ export default function SuperAdminNavbar() {
           <div className="flex items-center gap-4">
             <div className="text-right">
               <p className="text-sm font-medium text-white">{user?.name}</p>
-              <p className="text-xs text-purple-200">{user?.email}</p>
+              <p className="text-xs text-white/70">{user?.email}</p>
             </div>
-            <button
+            <Button
+              variant="ghost"
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
+              className="text-white hover:bg-white/20 border border-white/20"
             >
-              <FiLogOut className="w-4 h-4" />
+              <FiLogOut className="w-4 h-4 mr-2" />
               Logout
-            </button>
+            </Button>
           </div>
         </div>
       </div>
