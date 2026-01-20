@@ -5,6 +5,7 @@ import { FiCalendar, FiUser, FiMoreVertical } from 'react-icons/fi';
 import UserAvatar from './UserAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import TaskBucketBadge from './task/TaskBucketBadge';
 
 /**
  * Task card component with modern styling
@@ -83,6 +84,7 @@ export default function TaskCard({ task, onClick, onMenuClick }) {
         <Badge variant={getStatusVariant(task.status)}>
           {task.status.replace('_', ' ')}
         </Badge>
+        <TaskBucketBadge bucket={task.bucketId} />
       </div>
 
       {/* Footer */}

@@ -8,6 +8,7 @@ import ButtonLoader from './ButtonLoader';
 import ConfirmDialog from './ConfirmDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import TaskBucketBadge from './task/TaskBucketBadge';
 import toast from 'react-hot-toast';
 import apiClient from '@/lib/api';
 import useAuthStore from '@/store/authStore';
@@ -115,6 +116,7 @@ export default function TaskModal({ task, isOpen, onClose, onUpdate }) {
               }>
                 {selectedStatus?.replace('_', ' ')}
               </Badge>
+              <TaskBucketBadge bucket={task.bucketId} />
             </div>
           </div>
           <button

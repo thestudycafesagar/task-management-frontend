@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import ButtonLoader from './ButtonLoader';
+import TaskBucketSelect from './task/TaskBucketSelect';
 
 export default function CreateTaskModal({ isOpen, onClose }) {
   const queryClient = useQueryClient();
@@ -19,7 +20,8 @@ export default function CreateTaskModal({ isOpen, onClose }) {
     description: '',
     priority: 'MEDIUM',
     dueDate: '',
-    assignedTo: [] // Changed to array for multi-select
+    assignedTo: [], // Changed to array for multi-select
+    bucketId: null
   });
   const [employeeSearch, setEmployeeSearch] = useState('');
 
@@ -62,7 +64,8 @@ export default function CreateTaskModal({ isOpen, onClose }) {
       description: '',
       priority: 'MEDIUM',
       dueDate: '',
-      assignedTo: []
+      assignedTo: [],
+      bucketId: null
     });
     onClose();
   };
@@ -178,6 +181,13 @@ export default function CreateTaskModal({ isOpen, onClose }) {
                 </div>
               </div>
             </div>
+
+            {/* Bucket Selection */}
+            <TaskBucketSelect
+              value={formData.bucketId}
+              onChange={(bucketId) => setFormData({ ...formData, bucketId })}
+              disabled={createMutation.isPending}
+            />
 
             {/* Assign To */}
             <div>

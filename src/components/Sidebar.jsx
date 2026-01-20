@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, createContext, useContext } from 'react';
-import Link from 'next/link';
+import { TbBucket } from "react-icons/tb";import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -108,6 +108,13 @@ export default function Sidebar() {
       href: `${basePath}/dashboard`,
       roles: ['ADMIN', 'EMPLOYEE', 'SUPER_ADMIN'],
       subItems: employeeDashboardTabs, // Already conditionally set above
+    },
+    {
+      label: 'Buckets',
+      icon: TbBucket,
+      href: `${basePath}/bucket`,
+      roles: ['ADMIN', 'SUPER_ADMIN'],
+      adminOnly: true,
     },
     {
       label: 'Tasks',

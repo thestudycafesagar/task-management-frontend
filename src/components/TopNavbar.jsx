@@ -71,6 +71,9 @@ export default function TopNavbar() {
     },
   });
 
+  // Only show the latest 10 notifications in the dropdown
+  const visibleNotifications = notifications.slice(0, 10);
+
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'TASK_ASSIGNED':
@@ -192,7 +195,7 @@ export default function TopNavbar() {
 
           {/* Notifications Dropdown */}
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-96 bg-card rounded-xl shadow-float border border-border overflow-hidden z-50 animate-fadeIn">
+            <div className="fixed left-2 right-2 top-14 md:absolute md:top-auto md:mt-2 md:right-0 md:left-auto w-[calc(100vw-1rem)] md:w-96 bg-card rounded-xl shadow-float border border-border overflow-hidden z-50 animate-fadeIn">
               {/* Header */}
               <div className="px-4 py-3 border-b border-border bg-accent/50">
                 <div className="flex items-center justify-between">
@@ -217,7 +220,7 @@ export default function TopNavbar() {
                     <p className="text-sm text-muted-foreground">No notifications yet</p>
                   </div>
                 ) : (
-                  notifications.map((notification) => {
+                  visibleNotifications.map((notification) => {
                     const { icon: Icon, color } = getNotificationIcon(notification.type);
                     return (
                       <div
