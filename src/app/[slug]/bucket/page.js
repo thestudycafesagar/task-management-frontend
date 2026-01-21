@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/table';
 import BucketCreateModal from '@/components/bucket/BucketCreateModal';
 import BucketEditModal from '@/components/bucket/BucketEditModal';
+import BucketDetailModal from '@/components/bucket/BucketDetailModal';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import EmptyState from '@/components/EmptyState';
 import { TableSkeleton, CardSkeleton } from '@/components/SkeletonLoader';
@@ -33,6 +34,7 @@ export default function BucketPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingBucket, setEditingBucket] = useState(null);
   const [deletingBucket, setDeletingBucket] = useState(null);
+  const [viewingBucket, setViewingBucket] = useState(null);
 
   // Fetch buckets
   const { data: bucketsData, isLoading } = useQuery({
@@ -67,6 +69,10 @@ export default function BucketPage() {
 
   const handleEdit = (bucket) => {
     setEditingBucket(bucket);
+  };
+
+  const handleViewBucket = (bucket) => {
+    setViewingBucket(bucket);
   };
 
   return (
@@ -116,7 +122,11 @@ export default function BucketPage() {
             </TableHeader>
             <TableBody>
               {bucketsData.map((bucket) => (
-                <TableRow key={bucket._id}>
+                <TableRow 
+                  key={bucket._id}
+                  className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => handleViewBucket(bucket)}
+                >
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -138,14 +148,20 @@ export default function BucketPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleEdit(bucket)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(bucket);
+                        }}
                       >
                         <FiEdit2 className="w-4 h-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setDeletingBucket(bucket)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeletingBucket(bucket);
+                        }}
                         className="text-destructive hover:text-destructive"
                       >
                         <FiTrash2 className="w-4 h-4" />
@@ -185,7 +201,11 @@ export default function BucketPage() {
           </>
         ) : bucketsData && bucketsData.length > 0 ? (
           bucketsData.map((bucket) => (
-            <Card key={bucket._id}>
+            <Card 
+              key={bucket._id}
+              className="cursor-pointer hover:shadow-card transition-all"
+              onClick={() => handleViewBucket(bucket)}
+            >
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -213,7 +233,10 @@ export default function BucketPage() {
                     variant="outline"
                     size="sm"
                     className="flex-1"
-                    onClick={() => handleEdit(bucket)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(bucket);
+                    }}
                   >
                     <FiEdit2 className="w-4 h-4 mr-2" />
                     Edit
@@ -222,7 +245,10 @@ export default function BucketPage() {
                     variant="destructive"
                     size="sm"
                     className="flex-1"
-                    onClick={() => setDeletingBucket(bucket)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeletingBucket(bucket);
+                    }}
                   >
                     <FiTrash2 className="w-4 h-4 mr-2" />
                     Delete
@@ -263,6 +289,13 @@ export default function BucketPage() {
         isOpen={!!editingBucket}
         onClose={() => setEditingBucket(null)}
         bucket={editingBucket}
+      />
+
+      {/* Bucket Detail Modal - View Tasks */}
+      <BucketDetailModal
+        isOpen={!!viewingBucket}
+        onClose={() => setViewingBucket(null)}
+        bucket={viewingBucket}
       />
 
       {/* Delete Confirmation */}
