@@ -231,6 +231,14 @@ export default function DashboardPage() {
       {/* Activity Tab - Grouped by status */}
       {isEmployee && activeTab === 'activity' && (
         <div className="space-y-6">
+          {allTasksLoading ? (
+            <div className="grid grid-cols-1 gap-4">
+              {[1, 2, 3].map((i) => (
+                <CardSkeleton key={i} />
+              ))}
+            </div>
+          ) : (
+            <>
           {/* Pending Tasks */}
           {groupedTasks.PENDING && groupedTasks.PENDING.length > 0 && (
             <Card>
@@ -370,6 +378,8 @@ export default function DashboardPage() {
               title="No activity yet"
               description="Your task activity will appear here once you have tasks assigned"
             />
+          )}
+            </>
           )}
         </div>
       )}
