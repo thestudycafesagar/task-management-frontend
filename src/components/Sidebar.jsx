@@ -4,7 +4,7 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { TbBucket } from "react-icons/tb";
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import useAuthStore from '@/store/authStore';
 import useLoaderStore from '@/store/loaderStore';
@@ -53,16 +53,17 @@ export function SidebarProvider({ children }) {
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, organization, isImpersonating, hasAdminPrivileges } = useAuthStore();
   const { isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen } = useSidebar();
   const { showLoader, hideLoader } = useLoaderStore();
   const [clickedPath, setClickedPath] = useState('');
 
-  // Clear clicked path when pathname changes (actual navigation complete)
+  // Clear clicked path and hide loader when pathname OR search params change (actual navigation complete)
   useEffect(() => {
     setClickedPath('');
     hideLoader();
-  }, [pathname, hideLoader]);
+  }, [pathname, searchParams, hideLoader]);
 
   // Check if user has admin privileges (using backend flag)
   const isAdmin = hasAdminPrivileges || user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
