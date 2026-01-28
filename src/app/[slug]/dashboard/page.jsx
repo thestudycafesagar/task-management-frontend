@@ -29,48 +29,47 @@ export default function DashboardPage() {
   // Check if user is employee (not admin)
   const isEmployee = !hasAdminPrivileges && user?.role !== 'ADMIN' && user?.role !== 'SUPER_ADMIN';
 
-  // Debug logging
-  useEffect(() => {
-    console.log('🎯 Dashboard Debug:', {
-      userRole: user?.role,
-      isEmployee,
-      hasAdminPrivileges,
-      activeTab,
-    });
-  }, [user?.role, isEmployee, hasAdminPrivileges, activeTab]);
-
   // Fetch task stats - Real-time updates via Socket.IO
+  // Optimized: 30s cache, reduced refetches
   const { data: statsData, isLoading: statsLoading } = useQuery({
     queryKey: ['task-stats', params.slug],
     queryFn: async () => {
       const response = await apiClient.get('/tasks/stats');
       return response.data.data.stats;
     },
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 30000, // Consider fresh for 30 seconds
+    cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    refetchOnMount: false, // Don't refetch on every mount
+    refetchOnWindowFocus: false, // Socket.IO handles real-time updates
   });
 
   // Fetch recent tasks - Real-time updates via Socket.IO
+  // Optimized: 30s cache, reduced refetches
   const { data: tasksData, isLoading: tasksLoading, refetch } = useQuery({
     queryKey: ['recent-tasks', params.slug],
     queryFn: async () => {
       const response = await apiClient.get('/tasks?limit=6');
       return response.data.data.tasks;
     },
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 30000, // Consider fresh for 30 seconds
+    cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    refetchOnMount: false, // Don't refetch on every mount
+    refetchOnWindowFocus: false, // Socket.IO handles real-time updates
   });
 
   // Fetch all tasks for employee (for My Tasks tab)
+  // Optimized: Only load when tab is active, 30s cache
   const { data: allTasksData, isLoading: allTasksLoading } = useQuery({
     queryKey: ['all-tasks', params.slug],
     queryFn: async () => {
       const response = await apiClient.get('/tasks');
       return response.data.data.tasks;
     },
-    enabled: isEmployee, // Only fetch for employees
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    enabled: isEmployee && (activeTab === 'my-tasks' || activeTab === 'activity'), // Only fetch when needed
+    staleTime: 30000, // Consider fresh for 30 seconds
+    cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    refetchOnMount: false, // Don't refetch on every mount
+    refetchOnWindowFocus: false, // Socket.IO handles real-time updates
   });
 
   const handleTaskClick = (task) => {

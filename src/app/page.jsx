@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useAuthStore from '@/store/authStore';
 import GlobalLoader from '@/components/GlobalLoader';
@@ -9,6 +9,7 @@ export default function HomePage() {
   const router = useRouter();
   const { isAuthenticated, isLoading, fetchUser, user, organization, hasInitialized } = useAuthStore();
   const hasFetched = useRef(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   useEffect(() => {
     // Only fetch once on mount
@@ -18,11 +19,22 @@ export default function HomePage() {
         // Silently fail, will redirect to login below
       });
     }
-  }, []);
+
+    // Timeout after 10 seconds to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (!hasInitialized) {
+        console.warn('⚠️  Auth initialization timed out, redirecting to login');
+        setLoadingTimeout(true);
+        router.replace('/login');
+      }
+    }, 10000);
+
+    return () => clearTimeout(timeoutId);
+  }, [hasInitialized, fetchUser, router]);
 
   useEffect(() => {
     // Only redirect after initialization is complete
-    if (hasInitialized && !isLoading) {
+    if (hasInitialized && !isLoading && !loadingTimeout) {
       if (isAuthenticated && user) {
         if (user.role === 'SUPER_ADMIN') {
           router.replace('/super-admin');
@@ -35,7 +47,7 @@ export default function HomePage() {
         router.replace('/login');
       }
     }
-  }, [hasInitialized, isLoading, isAuthenticated, user, organization, router]);
+  }, [hasInitialized, isLoading, isAuthenticated, user, organization, router, loadingTimeout]);
 
   return <GlobalLoader message="Loading..." />;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { initializeApp, getApps } from 'firebase/app';
 import { firebaseConfig, vapidKey } from '@/lib/firebase';
@@ -12,13 +12,20 @@ import toast from 'react-hot-toast';
  * Hook to handle FCM token registration and push notifications
  */
 export default function useFCMToken() {
-  const { user } = useAuthStore();
+  const { user, isAuthenticated, hasInitialized } = useAuthStore();
   const [token, setToken] = useState(null);
   const [notificationPermission, setNotificationPermission] = useState('default');
+  const hasAttemptedInit = useRef(false);
 
   useEffect(() => {
-    // Only run in browser and if user is authenticated
-    if (typeof window === 'undefined' || !user) return;
+    // Only run in browser, if user is authenticated, and initialization is complete
+    if (typeof window === 'undefined' || !isAuthenticated || !user || !hasInitialized) {
+      return;
+    }
+
+    // Prevent multiple initialization attempts
+    if (hasAttemptedInit.current) return;
+    hasAttemptedInit.current = true;
 
     const initFCM = async () => {
       try {
@@ -38,8 +45,13 @@ export default function useFCMToken() {
       }
     };
 
-    initFCM();
-  }, [user]);
+    // Add a small delay to ensure everything else is ready
+    const timeoutId = setTimeout(() => {
+      initFCM();
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [user, isAuthenticated, hasInitialized]);
 
   const registerFCMToken = async () => {
     try {

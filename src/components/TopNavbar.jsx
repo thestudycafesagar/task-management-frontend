@@ -8,6 +8,7 @@ import { AiTwotoneNotification } from "react-icons/ai";
 import { FiBell, FiLogOut, FiAlertCircle, FiSettings, FiClock, FiCheckCircle, FiMessageSquare, FiMenu } from 'react-icons/fi';
 import useAuthStore from '@/store/authStore';
 import useNotificationStore from '@/store/notificationStore';
+import useLoaderStore from '@/store/loaderStore';
 import { useSidebar } from './Sidebar';
 import UserAvatar from './UserAvatar';
 import apiClient from '@/lib/api';
@@ -22,6 +23,7 @@ export default function TopNavbar() {
   const queryClient = useQueryClient();
   const { user, organization, isImpersonating, logout, exitImpersonation, hasAdminPrivileges } = useAuthStore();
   const { notifications, unreadCount, setNotifications, markAsRead, markAllAsRead } = useNotificationStore();
+  const { showLoader, hideLoader } = useLoaderStore();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const profileMenuRef = useRef(null);
@@ -32,19 +34,22 @@ export default function TopNavbar() {
     queryKey: ['notifications'],
     queryFn: async () => {
       const response = await apiClient.get('/notifications');
-      console.log('📩 Fetched notifications:', response.data.data);
       return response.data.data;
     },
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnMount: false, // Don't refetch on mount, socket handles updates
+    refetchOnWindowFocus: false, // Don't refetch on focus, socket handles updates
     enabled: !!user, // Only fetch if user is logged in
   });
 
-  // Update store when notifications data changes
+  // Update store when notifications data changes - use ref to prevent double updates
+  const lastNotificationUpdate = useRef(null);
   useEffect(() => {
     if (notificationsData) {
-      console.log('✅ Setting notifications in store:', notificationsData.notifications.length, 'unread:', notificationsData.unreadCount);
-      setNotifications(notificationsData.notifications, notificationsData.unreadCount);
+      const updateKey = `${notificationsData.notifications.length}-${notificationsData.unreadCount}`;
+      if (lastNotificationUpdate.current !== updateKey) {
+        lastNotificationUpdate.current = updateKey;
+        setNotifications(notificationsData.notifications, notificationsData.unreadCount);
+      }
     }
   }, [notificationsData, setNotifications]);
 
@@ -108,26 +113,31 @@ export default function TopNavbar() {
     try {
       // If impersonating, exit impersonation instead of logging out
       if (isImpersonating) {
+        showLoader('Exiting impersonation...');
         await exitImpersonation();
-        toast.success('Exited impersonation mode');
         router.push('/super-admin');
+        toast.success('Exited impersonation mode');
       } else {
         // Normal logout
+        showLoader('Logging out...');
         await logout();
-        toast.success('Logged out successfully');
         router.push('/login');
+        toast.success('Logged out successfully');
       }
     } catch (error) {
+      hideLoader();
       toast.error(isImpersonating ? 'Failed to exit impersonation' : 'Failed to logout');
     }
   };
 
   const handleExitImpersonation = async () => {
     try {
+      showLoader('Exiting impersonation...');
       await exitImpersonation();
-      toast.success('Exited impersonation mode');
       router.push('/super-admin');
+      toast.success('Exited impersonation mode');
     } catch (error) {
+      hideLoader();
       toast.error('Failed to exit impersonation');
     }
   };

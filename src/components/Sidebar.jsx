@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useTransition, createContext, useContext } from 'react';
-import { TbBucket } from "react-icons/tb";import Link from 'next/link';
+import { useState, useEffect, createContext, useContext } from 'react';
+import { TbBucket } from "react-icons/tb";
+import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import useAuthStore from '@/store/authStore';
+import useLoaderStore from '@/store/loaderStore';
 import {
   FiHome,
   FiCheckSquare,
@@ -53,8 +55,14 @@ export default function Sidebar() {
   const router = useRouter();
   const { user, organization, isImpersonating, hasAdminPrivileges } = useAuthStore();
   const { isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen } = useSidebar();
-  const [isPending, startTransition] = useTransition();
-  const [loadingPath, setLoadingPath] = useState('');
+  const { showLoader, hideLoader } = useLoaderStore();
+  const [clickedPath, setClickedPath] = useState('');
+
+  // Clear clicked path when pathname changes (actual navigation complete)
+  useEffect(() => {
+    setClickedPath('');
+    hideLoader();
+  }, [pathname, hideLoader]);
 
   // Check if user has admin privileges (using backend flag)
   const isAdmin = hasAdminPrivileges || user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
@@ -64,14 +72,17 @@ export default function Sidebar() {
   const basePath = organization?.slug ? `/${organization.slug}` : '';
 
   const handleNavigation = (href) => {
-    if (loadingPath) return;
+    // Immediate visual feedback
+    setClickedPath(href);
     
-    setLoadingPath(href);
-    startTransition(() => {
-      router.push(href);
-      setIsMobileOpen(false);
-      setTimeout(() => setLoadingPath(''), 500);
-    });
+    // Show page loader
+    showLoader('Loading page...');
+    
+    // Immediate navigation
+    router.push(href);
+    
+    // Close mobile menu
+    setIsMobileOpen(false);
   };
 
   // Check if user is employee (any role that is NOT admin/super-admin)
@@ -93,12 +104,6 @@ export default function Sidebar() {
       href: `${basePath}/dashboard?tab=activity`,
     },
   ] : undefined;
-
-  console.log('📋 Dashboard tabs config:', {
-    isEmployee,
-    hasSubItems: !!employeeDashboardTabs,
-    tabsCount: employeeDashboardTabs?.length || 0
-  });
 
   // Navigation items
   const navItems = [
@@ -240,32 +245,26 @@ export default function Sidebar() {
               {filteredItems.map((item) => {
                 const Icon = item.icon;
                 const isOnItemPage = pathname.startsWith(item.href.split('?')[0]);
-                const isLoading = loadingPath === item.href;
-                const isActive = item.subItems ? false : pathname === item.href;
+                const isClicked = clickedPath === item.href;
+                const isActive = item.subItems ? false : (pathname === item.href || isClicked);
                 const isParentActive = item.subItems && isOnItemPage;
 
                 return (
                   <div key={item.href}>
                     <button
                       onClick={() => handleNavigation(item.href)}
-                      disabled={isLoading || !!loadingPath}
                       className={cn(
-                        'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200',
+                        'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150',
                         isActive
                           ? 'bg-primary text-primary-foreground shadow-soft'
                           : isParentActive
                           ? 'bg-accent text-accent-foreground'
                           : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-                        isCollapsed && 'justify-center',
-                        isLoading && 'opacity-60 cursor-wait'
+                        isCollapsed && 'justify-center'
                       )}
                       title={isCollapsed ? item.label : undefined}
                     >
-                      {isLoading ? (
-                        <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                      ) : (
-                        <Icon className="w-5 h-5 flex-shrink-0" />
-                      )}
+                      <Icon className="w-5 h-5 flex-shrink-0" />
                       {!isCollapsed && (
                         <span className="font-medium text-sm">{item.label}</span>
                       )}
@@ -289,26 +288,20 @@ export default function Sidebar() {
                             isSubActive = pathname === subItem.href.split('?')[0] && !currentSearch.includes('tab=');
                           }
                           
-                          const isSubLoading = loadingPath === subItem.href;
+                          const isSubClicked = clickedPath === subItem.href;
 
                           return (
                             <button
                               key={subItem.href}
                               onClick={() => handleNavigation(subItem.href)}
-                              disabled={isSubLoading || !!loadingPath}
                               className={cn(
-                                'w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm',
-                                isSubActive
+                                'w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-150 text-sm',
+                                isSubActive || isSubClicked
                                   ? 'bg-primary text-primary-foreground'
-                                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-                                isSubLoading && 'opacity-60 cursor-wait'
+                                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                               )}
                             >
-                              {isSubLoading ? (
-                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                              ) : (
-                                <SubIcon className="w-4 h-4 flex-shrink-0" />
-                              )}
+                              <SubIcon className="w-4 h-4 flex-shrink-0" />
                               <span className="font-medium">{subItem.label}</span>
                             </button>
                           );
@@ -332,29 +325,23 @@ export default function Sidebar() {
                 <div className="space-y-1">
                   {filteredSuperAdminItems.map((item) => {
                     const Icon = item.icon;
-                    const isActive = pathname === item.href;
-                    const isLoading = loadingPath === item.href;
+                    const isClicked = clickedPath === item.href;
+                    const isActive = pathname === item.href || isClicked;
 
                     return (
                       <button
                         key={item.href}
                         onClick={() => handleNavigation(item.href)}
-                        disabled={isLoading || !!loadingPath}
                         className={cn(
-                          'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200',
+                          'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150',
                           isActive
                             ? 'bg-primary text-primary-foreground shadow-soft'
                             : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-                          isCollapsed && 'justify-center',
-                          isLoading && 'opacity-60 cursor-wait'
+                          isCollapsed && 'justify-center'
                         )}
                         title={isCollapsed ? item.label : undefined}
                       >
-                        {isLoading ? (
-                          <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                        ) : (
-                          <Icon className="w-5 h-5 flex-shrink-0" />
-                        )}
+                        <Icon className="w-5 h-5 flex-shrink-0" />
                         {!isCollapsed && (
                           <span className="font-medium text-sm">{item.label}</span>
                         )}

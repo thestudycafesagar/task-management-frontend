@@ -12,11 +12,17 @@ const useAuthStore = create((set, get) => ({
   isLoading: false,
   isAuthenticated: false,
   hasInitialized: false,
+  token: null, // Store token for Socket.IO
 
   /**
    * Set user data
    */
   setUser: (user) => set({ user, isAuthenticated: !!user }),
+
+  /**
+   * Set token
+   */
+  setToken: (token) => set({ token }),
 
   /**
    * Set organization data
@@ -38,6 +44,7 @@ const useAuthStore = create((set, get) => ({
       set({
         user: response.data.data.user,
         organization: response.data.data.organization,
+        token: response.data.data.token, // Store token for Socket.IO
         isImpersonating: response.data.data.isImpersonating || false,
         hasAdminPrivileges: response.data.data.hasAdminPrivileges || false,
         isAuthenticated: true,
@@ -49,6 +56,7 @@ const useAuthStore = create((set, get) => ({
       set({
         user: null,
         organization: null,
+        token: null, // Clear token
         isImpersonating: false,
         hasAdminPrivileges: false,
         isAuthenticated: false,
@@ -69,6 +77,7 @@ const useAuthStore = create((set, get) => ({
     set({
       user: userData.user,
       organization: userData.organization,
+      token: userData.token, // Store token for Socket.IO
       isAuthenticated: true,
       hasAdminPrivileges: isAdminOrSuperAdmin,
       isLoading: false,
@@ -85,6 +94,7 @@ const useAuthStore = create((set, get) => ({
     set({
       user: null,
       organization: null,
+      token: null, // Clear token
       isImpersonating: false,
       hasAdminPrivileges: false,
       isAuthenticated: false,
@@ -107,6 +117,7 @@ const useAuthStore = create((set, get) => ({
     set({
       user: userData.user,
       organization: userData.organization,
+      token: userData.token, // Store token for Socket.IO
       isAuthenticated: true,
       hasAdminPrivileges: isAdminOrSuperAdmin,
       hasInitialized: true,

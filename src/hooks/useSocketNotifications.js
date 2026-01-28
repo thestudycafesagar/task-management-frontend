@@ -9,42 +9,48 @@ import toast from 'react-hot-toast';
 import Cookies from 'js-cookie';
 
 export const useSocketNotifications = () => {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, hasInitialized, token } = useAuthStore();
   const { addNotification } = useNotificationStore();
   const queryClient = useQueryClient();
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
+  const hasConnected = useRef(false);
 
   useEffect(() => {
-    // Only try to connect if user is authenticated AND token exists
-    if (!isAuthenticated || !user) {
+    // Only try to connect if:
+    // 1. User is authenticated
+    // 2. User object exists
+    // 3. Auth initialization is complete
+    // 4. Token is available
+    if (!isAuthenticated || !user || !hasInitialized || !token) {
       disconnectSocket();
       reconnectAttempts.current = 0;
+      hasConnected.current = false;
       return;
     }
 
-    // Get token from cookies
-    const token = Cookies.get('token');
-    if (!token) {
-      // Don't log warning on initial load - just wait for login
-      return;
-    }
+    // Prevent multiple connection attempts
+    if (hasConnected.current) return;
 
-    // Initialize socket connection
-    let socket;
-    try {
-      socket = initializeSocket(token);
-      reconnectAttempts.current = 0;
-    } catch (error) {
-      console.error('Failed to initialize socket:', error);
-      return;
-    }
+    // Add a small delay to ensure everything is ready
+    const timeoutId = setTimeout(() => {
+      hasConnected.current = true;
+      
+      // Initialize socket connection
+      let socket;
+      try {
+        socket = initializeSocket(token);
+        reconnectAttempts.current = 0;
+      } catch (error) {
+        console.error('Socket initialization failed:', error);
+        hasConnected.current = false;
+        return;
+      }
 
-    // Handle connection success
-    socket.on('connect', () => {
-      console.log('✅ Socket.IO connected successfully');
-      reconnectAttempts.current = 0;
-    });
+      // Handle connection success
+      socket.on('connect', () => {
+        reconnectAttempts.current = 0;
+      });
 
     // Handle connection errors
     socket.on('connect_error', (error) => {
@@ -62,8 +68,6 @@ export const useSocketNotifications = () => {
 
     // Listen for new notifications
     socket.on('notification', (notification) => {
-      console.log('📩 New notification received:', notification);
-      
       // Add to store
       addNotification(notification);
 
@@ -97,18 +101,19 @@ export const useSocketNotifications = () => {
 
     // Listen for task updates (real-time collaboration)
     socket.on('task-updated', (data) => {
-      console.log('📝 Task updated:', {
-        action: data.action,
-        updatedBy: data.updatedBy,
-        taskId: data.task?._id,
-        statusChanged: data.statusChanged
+      // Invalidate first, then refetch for instant UI update
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === 'tasks' 
       });
-      
-      // FORCE immediate refetch for instant UI update (WhatsApp-like)
-      queryClient.refetchQueries({ queryKey: ['tasks'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['recent-tasks'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['all-tasks'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['task-stats'], type: 'active' });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === 'recent-tasks' 
+      });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === 'all-tasks' 
+      });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === 'task-stats' 
+      });
       
       // Show toast notification for certain actions
       if (data.updatedBy !== user?.email) {
@@ -134,18 +139,22 @@ export const useSocketNotifications = () => {
 
     // Listen for new tasks created
     socket.on('task-created', (data) => {
-      console.log('✨ New task created:', {
-        createdBy: data.createdBy,
-        taskId: data.task?._id,
-        title: data.task?.title
+      // Invalidate first, then refetch for instant UI update
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === 'tasks' 
       });
-      
-      // FORCE immediate refetch for instant UI update (WhatsApp-like)
-      queryClient.refetchQueries({ queryKey: ['tasks'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['recent-tasks'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['all-tasks'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['task-stats'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['analytics'], type: 'active' });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === 'recent-tasks' 
+      });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === 'all-tasks' 
+      });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === 'task-stats' 
+      });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === 'analytics' 
+      });
       
       // Show toast if not the creator
       if (data.createdBy !== user?.email) {
@@ -166,16 +175,19 @@ export const useSocketNotifications = () => {
 
     // Listen for tasks deleted
     socket.on('task-deleted', (data) => {
-      console.log('🗑️ Task deleted:', {
-        deletedBy: data.deletedBy,
-        taskId: data.taskId
+      // Invalidate first, then refetch for instant UI update
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === 'tasks' 
       });
-      
-      // FORCE immediate refetch for instant UI update (WhatsApp-like)
-      queryClient.refetchQueries({ queryKey: ['tasks'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['recent-tasks'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['all-tasks'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['task-stats'], type: 'active' });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === 'recent-tasks' 
+      });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === 'all-tasks' 
+      });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === 'task-stats' 
+      });
       
       // Show toast notification
       if (data.deletedBy !== user?.email) {
@@ -196,8 +208,16 @@ export const useSocketNotifications = () => {
         currentSocket.off('task-created');
         currentSocket.off('task-deleted');
       }
+      hasConnected.current = false;
     };
-  }, [isAuthenticated, user, addNotification, queryClient]);
+    }, 1000); // 1 second delay to ensure auth is complete
+
+    return () => {
+      clearTimeout(timeoutId);
+      disconnectSocket();
+      hasConnected.current = false;
+    };
+  }, [isAuthenticated, user, hasInitialized, token, addNotification, queryClient]);
 };
 
 export default useSocketNotifications;

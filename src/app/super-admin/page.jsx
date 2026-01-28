@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import useLoaderStore from '@/store/loaderStore';
 import {
   Table,
   TableBody,
@@ -28,6 +29,7 @@ import { formatDate } from '@/lib/utils';
 export default function SuperAdminPage() {
   const router = useRouter();
   const { impersonate } = useAuthStore();
+  const { showLoader, hideLoader } = useLoaderStore();
   const [search, setSearch] = useState('');
   const [selectedOrg, setSelectedOrg] = useState(null);
   const [showToggleDialog, setShowToggleDialog] = useState(false);

@@ -12,8 +12,6 @@ export const initializeSocket = (token) => {
                     process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 
                     'http://localhost:5000';
 
-  console.log('🔌 Socket connecting to:', socketUrl);
-
   socket = io(socketUrl, {
     auth: {
       token
@@ -25,15 +23,18 @@ export const initializeSocket = (token) => {
   });
 
   socket.on('connect', () => {
-    console.log('✅ Socket connected:', socket.id);
+    // Socket connected successfully
   });
 
   socket.on('disconnect', (reason) => {
-    console.log('❌ Socket disconnected:', reason);
+    if (reason === 'io server disconnect') {
+      // Server disconnected, try to reconnect
+      socket.connect();
+    }
   });
 
   socket.on('connect_error', (error) => {
-    console.error('❌ Socket connection error:', error.message);
+    console.error('Socket connection error:', error.message);
   });
 
   return socket;

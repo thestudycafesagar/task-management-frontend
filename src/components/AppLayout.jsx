@@ -3,7 +3,9 @@
 import * as React from 'react';
 import Sidebar, { SidebarProvider, useSidebar } from './Sidebar';
 import TopNavbar from './TopNavbar';
+import GlobalLoader from './GlobalLoader';
 import useSocketNotifications from '@/hooks/useSocketNotifications';
+import useLoaderStore from '@/store/loaderStore';
 import { cn } from '@/lib/utils';
 
 /**
@@ -75,9 +77,12 @@ function MainContent({ children }) {
 export default function AppLayout({ children }) {
   // Initialize Socket.IO for real-time notifications
   useSocketNotifications();
+  
+  const { isGlobalLoading, loadingMessage } = useLoaderStore();
 
   return (
     <SidebarProvider>
+      {isGlobalLoading && <GlobalLoader message={loadingMessage} />}
       <MainContent>{children}</MainContent>
     </SidebarProvider>
   );

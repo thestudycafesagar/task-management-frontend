@@ -4,16 +4,15 @@ importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compa
 
 console.log('🔧 Firebase Service Worker loaded');
 
-// Firebase configuration - loaded from environment at build time
-// Make sure these environment variables are set in your .env file
+// Firebase configuration - Use actual values (env vars don't work in service workers)
 firebase.initializeApp({
-  apiKey: self.FIREBASE_API_KEY || "YOUR_FIREBASE_API_KEY",
-  authDomain: self.FIREBASE_AUTH_DOMAIN || "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: self.FIREBASE_PROJECT_ID || "YOUR_PROJECT_ID",
-  storageBucket: self.FIREBASE_STORAGE_BUCKET || "YOUR_PROJECT_ID.firebasestorage.app",
-  messagingSenderId: self.FIREBASE_MESSAGING_SENDER_ID || "YOUR_MESSAGING_SENDER_ID",
-  appId: self.FIREBASE_APP_ID || "YOUR_APP_ID",
-  measurementId: self.FIREBASE_MEASUREMENT_ID || "YOUR_MEASUREMENT_ID"
+  apiKey: "AIzaSyBg7gQJH9r1XIoz354Y1qUsqmoGkj2halk",
+  authDomain: "task-management-46a39.firebaseapp.com",
+  projectId: "task-management-46a39",
+  storageBucket: "task-management-46a39.firebasestorage.app",
+  messagingSenderId: "210538641034",
+  appId: "1:210538641034:web:2b34a114b8cbbde67e9f73",
+  measurementId: "G-GQDVRY066F"
 });
 
 console.log('✅ Firebase initialized in Service Worker');

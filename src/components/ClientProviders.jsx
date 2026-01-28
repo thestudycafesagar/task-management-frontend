@@ -8,11 +8,11 @@ import useFCMToken from '@/hooks/useFCMToken';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: true, // Refetch when window regains focus
-      refetchOnReconnect: true, // Refetch when internet reconnects
-      refetchOnMount: true, // Refetch when component mounts
-      staleTime: 0, // Data considered stale immediately for instant updates
-      cacheTime: 1000 * 60 * 5, // Keep unused data in cache for 5 minutes
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+      refetchOnMount: true,
+      staleTime: 0, // Always consider data stale - allows immediate refetches
+      cacheTime: 1000 * 60 * 5,
       retry: 1,
     },
   },

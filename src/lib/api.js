@@ -3,6 +3,7 @@ import axios from 'axios';
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
   withCredentials: true,
+  timeout: 15000, // 15 second timeout to prevent hanging
   headers: {
     'Content-Type': 'application/json',
   },
@@ -24,6 +25,21 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error) => {
+    // Handle timeout errors
+    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      console.error('❌ Request timeout - Server may be down');
+      if (typeof window !== 'undefined') {
+        // Don't redirect on timeout, just let the error propagate
+        return Promise.reject(new Error('Request timeout - Please check if server is running'));
+      }
+    }
+
+    // Handle network errors
+    if (error.message === 'Network Error') {
+      console.error('❌ Network error - Server may not be running');
+      return Promise.reject(new Error('Cannot connect to server - Please ensure backend is running'));
+    }
+
     if (error.response?.status === 401) {
       // Clear any invalid cookies and redirect to login
       if (typeof window !== 'undefined') {
