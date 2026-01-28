@@ -12,6 +12,21 @@ const apiClient = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
+    // Add Authorization header with token from localStorage/authStore if available
+    if (typeof window !== 'undefined') {
+      try {
+        // Try to get token from auth store
+        const authStoreData = localStorage.getItem('auth-storage');
+        if (authStoreData) {
+          const { state } = JSON.parse(authStoreData);
+          if (state?.token) {
+            config.headers.Authorization = `Bearer ${state.token}`;
+          }
+        }
+      } catch (e) {
+        // Ignore errors, will fall back to cookie auth
+      }
+    }
     return config;
   },
   (error) => {
