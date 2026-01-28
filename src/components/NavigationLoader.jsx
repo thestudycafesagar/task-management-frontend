@@ -12,10 +12,10 @@ export default function NavigationLoader() {
     // Show loader immediately when navigation starts
     setLoading(true);
 
-    // Hide loader after page renders (shorter delay for snappier feel)
+    // Hide loader after page renders (very short delay for snappier feel)
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 150);
+    }, 50); // Reduced from 150ms to 50ms
 
     return () => clearTimeout(timer);
   }, [pathname, searchParams]);

@@ -59,7 +59,7 @@ export default function DashboardPage() {
 
   // Fetch all tasks for employee (for My Tasks tab)
   // Optimized: Only load when tab is active, 30s cache
-  const { data: allTasksData, isLoading: allTasksLoading } = useQuery({
+  const { data: allTasksData, isLoading: allTasksLoading, isFetching: allTasksFetching } = useQuery({
     queryKey: ['all-tasks', params.slug],
     queryFn: async () => {
       const response = await apiClient.get('/tasks');
@@ -70,6 +70,7 @@ export default function DashboardPage() {
     cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
     refetchOnMount: false, // Don't refetch on every mount
     refetchOnWindowFocus: false, // Socket.IO handles real-time updates
+    keepPreviousData: true, // Keep showing old data while fetching new data
   });
 
   const handleTaskClick = (task) => {
@@ -201,7 +202,7 @@ export default function DashboardPage() {
             </span>
           </CardHeader>
           <CardContent>
-            {allTasksLoading ? (
+            {(allTasksLoading && !allTasksData) ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <CardSkeleton key={i} />
@@ -231,7 +232,7 @@ export default function DashboardPage() {
       {/* Activity Tab - Grouped by status */}
       {isEmployee && activeTab === 'activity' && (
         <div className="space-y-6">
-          {allTasksLoading ? (
+          {(allTasksLoading && !allTasksData) ? (
             <div className="grid grid-cols-1 gap-4">
               {[1, 2, 3].map((i) => (
                 <CardSkeleton key={i} />
@@ -372,7 +373,7 @@ export default function DashboardPage() {
           )}
 
           {/* Empty state for activity */}
-          {Object.keys(groupedTasks).length === 0 && !allTasksLoading && (
+          {Object.keys(groupedTasks).length === 0 && !allTasksLoading && !allTasksFetching && (
             <EmptyState
               icon={FiActivity}
               title="No activity yet"
