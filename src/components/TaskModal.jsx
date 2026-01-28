@@ -19,15 +19,15 @@ import useAuthStore from '@/store/authStore';
 export default function TaskModal({ task, isOpen, onClose, onUpdate }) {
   const { user, hasAdminPrivileges } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState(task?.status);
+  const [selectedStatus, setSelectedStatus] = useState(task?.myStatus || task?.status);
   const [uploading, setUploading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingStatus, setPendingStatus] = useState(null);
 
-  // Update selected status when task changes
+  // Update selected status when task changes - use myStatus for employees, status for admins
   useEffect(() => {
-    setSelectedStatus(task?.status);
-  }, [task?.status]);
+    setSelectedStatus(task?.myStatus || task?.status);
+  }, [task?.myStatus, task?.status]);
 
   if (!isOpen || !task) return null;
 
@@ -52,7 +52,7 @@ export default function TaskModal({ task, isOpen, onClose, onUpdate }) {
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update task status');
       // Revert to previous status on error
-      setSelectedStatus(task?.status);
+      setSelectedStatus(task?.myStatus || task?.status);
     } finally {
       setIsLoading(false);
       setPendingStatus(null);
@@ -166,15 +166,30 @@ export default function TaskModal({ task, isOpen, onClose, onUpdate }) {
             <h3 className="text-sm font-semibold text-foreground mb-2">Assigned To</h3>
             <div className="space-y-2">
               {Array.isArray(task.assignedTo) ? (
-                task.assignedTo.map((user) => (
-                  <div key={user._id} className="flex items-center gap-3 p-3 bg-accent/50 rounded-xl">
-                    <UserAvatar user={user} />
-                    <div>
-                      <p className="font-medium text-foreground">{user.name}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                task.assignedTo.map((user) => {
+                  // Find employee's individual status if available (for admin view)
+                  const employeeStatus = task.employeeStatus?.find(
+                    es => es.employeeId === user._id
+                  );
+                  
+                  return (
+                    <div key={user._id} className="flex items-center gap-3 p-3 bg-accent/50 rounded-xl">
+                      <UserAvatar user={user} />
+                      <div className="flex-1">
+                        <p className="font-medium text-foreground">{user.name}</p>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                      </div>
+                      {employeeStatus && hasAdminPrivileges && (
+                        <Badge variant={
+                          employeeStatus.status === 'COMPLETED' ? 'success' : 
+                          employeeStatus.status === 'IN_PROGRESS' ? 'default' : 'secondary'
+                        } className="text-xs">
+                          {employeeStatus.status.replace('_', ' ')}
+                        </Badge>
+                      )}
                     </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div className="flex items-center gap-3 p-3 bg-accent/50 rounded-xl">
                   <UserAvatar user={task.assignedTo} />

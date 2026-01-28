@@ -35,6 +35,9 @@ export default function TaskCard({ task, onClick, onMenuClick }) {
     }
   };
 
+  // Use employee's individual status if available, otherwise use overall task status
+  const displayStatus = task.myStatus || task.status;
+
   return (
     <Card
       onClick={onClick}
@@ -81,8 +84,8 @@ export default function TaskCard({ task, onClick, onMenuClick }) {
         <Badge variant={getPriorityVariant(task.priority)}>
           {task.priority}
         </Badge>
-        <Badge variant={getStatusVariant(task.status)}>
-          {task.status.replace('_', ' ')}
+        <Badge variant={getStatusVariant(displayStatus)}>
+          {displayStatus.replace('_', ' ')}
         </Badge>
         <TaskBucketBadge bucket={task.bucketId} />
       </div>
