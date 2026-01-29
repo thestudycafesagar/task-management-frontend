@@ -10,11 +10,11 @@ import { initNotificationCleanup } from '@/utils/cleanupServiceWorkers';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: false, // Disable to reduce API calls
       refetchOnReconnect: true,
-      refetchOnMount: true,
-      staleTime: 0, // Always consider data stale - allows immediate refetches
-      cacheTime: 1000 * 60 * 5,
+      refetchOnMount: 'always',
+      staleTime: 60000, // 1 minute default - socket handles real-time
+      cacheTime: 1000 * 60 * 10, // 10 minutes cache
       retry: 1,
     },
   },

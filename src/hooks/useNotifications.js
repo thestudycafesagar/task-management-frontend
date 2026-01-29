@@ -18,16 +18,18 @@ export const useNotifications = (filters = {}) => {
   } = useQuery({
     queryKey: ['notifications', filters],
     queryFn: () => notificationService.getNotifications(filters),
-    staleTime: 10000,
-    refetchInterval: 30000,
+    staleTime: 60000, // 1 minute - notifications come via socket anyway
+    refetchOnWindowFocus: false, // Don't refetch on tab focus
+    // Removed refetchInterval - socket handles real-time updates
   });
 
   // Fetch unread count
   const { data: unreadCount } = useQuery({
     queryKey: ['unread-count'],
     queryFn: notificationService.getUnreadCount,
-    staleTime: 10000,
-    refetchInterval: 30000,
+    staleTime: 60000, // 1 minute
+    refetchOnWindowFocus: false,
+    // Removed refetchInterval - socket handles real-time updates
   });
 
   // Mark as read mutation

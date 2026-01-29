@@ -1,12 +1,21 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { initializeSocket, disconnectSocket, getSocket } from '@/lib/socket';
 import useAuthStore from '@/store/authStore';
 import useNotificationStore from '@/store/notificationStore';
 import toast from 'react-hot-toast';
 import Cookies from 'js-cookie';
+
+// Debounce helper
+const debounce = (func, wait) => {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
 
 export const useSocketNotifications = () => {
   const { isAuthenticated, user, hasInitialized, token } = useAuthStore();
@@ -15,6 +24,18 @@ export const useSocketNotifications = () => {
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
   const hasConnected = useRef(false);
+  const lastNotificationId = useRef(null);
+  const lastTaskUpdateTime = useRef(0);
+
+  // Debounced refetch to prevent cascading API calls
+  const debouncedRefetch = useCallback(
+    debounce(() => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    }, 500),
+    [queryClient]
+  );
 
   useEffect(() => {
     // Only try to connect if:
@@ -66,15 +87,22 @@ export const useSocketNotifications = () => {
       }
     });
 
-    // Listen for new notifications
+    // Listen for new notifications - THIS IS THE PRIMARY NOTIFICATION SOURCE
     socket.on('notification', (notification) => {
+      // Deduplicate notifications
+      if (notification._id && notification._id === lastNotificationId.current) {
+        console.log('⚠️ Duplicate notification ignored:', notification._id);
+        return;
+      }
+      lastNotificationId.current = notification._id;
+
       // Add to store
       addNotification(notification);
 
       // Show toast notification
       toast(notification.message, {
         icon: '🔔',
-        duration: 5000,
+        duration: 4000,
         position: 'top-right',
         style: {
           background: '#3B82F6',
@@ -85,111 +113,40 @@ export const useSocketNotifications = () => {
         }
       });
 
-      // FORCE immediate refetch instead of just invalidating
-      queryClient.refetchQueries(['notifications']);
-      
-      // Invalidate task queries if it's task-related
-      if (notification.taskId) {
-        // Force refetch for instant UI update
-        queryClient.refetchQueries(['tasks']);
-        queryClient.refetchQueries(['recent-tasks']);
-        queryClient.refetchQueries(['all-tasks']);
-        queryClient.refetchQueries(['task-stats']);
-        queryClient.refetchQueries(['analytics']);
-      }
+      // Debounced refetch to prevent API flooding
+      debouncedRefetch();
     });
 
-    // Listen for task updates (real-time collaboration)
+    // Listen for task updates (real-time collaboration) - NO TOAST HERE (handled by notification event)
     socket.on('task-updated', (data) => {
-      // Invalidate first, then refetch for instant UI update
-      queryClient.invalidateQueries({ 
-        predicate: (query) => query.queryKey[0] === 'tasks' 
-      });
-      queryClient.invalidateQueries({ 
-        predicate: (query) => query.queryKey[0] === 'recent-tasks' 
-      });
-      queryClient.invalidateQueries({ 
-        predicate: (query) => query.queryKey[0] === 'all-tasks' 
-      });
-      queryClient.invalidateQueries({ 
-        predicate: (query) => query.queryKey[0] === 'task-stats' 
-      });
-      
-      // Show toast notification for certain actions
-      if (data.updatedBy !== user?.email) {
-        const actionMessages = {
-          'accepted': `✅ Task "${data.task?.title}" was accepted`,
-          'started': `🚀 Work started on "${data.task?.title}"`,
-          'submitted': `📤 Task "${data.task?.title}" was submitted`,
-          'completed': `🎉 Task "${data.task?.title}" was completed`,
-          'rejected': `⚠️ Task "${data.task?.title}" needs revision`
-        };
-        
-        const message = actionMessages[data.action] || `Task "${data.task?.title}" was updated`;
-        
-        if (data.action && data.action !== 'comment-added') {
-          toast(message, {
-            icon: data.action === 'completed' ? '🎉' : '📝',
-            duration: 3000,
-            position: 'top-right'
-          });
-        }
+      // Throttle task updates to prevent cascading
+      const now = Date.now();
+      if (now - lastTaskUpdateTime.current < 300) {
+        console.log('⚠️ Task update throttled');
+        return;
       }
+      lastTaskUpdateTime.current = now;
+
+      // Use debounced refetch instead of immediate invalidation
+      debouncedRefetch();
+      
+      // NOTE: Toast notifications are handled by the 'notification' event
+      // Don't show duplicate toasts here
     });
 
-    // Listen for new tasks created
+    // Listen for new tasks created - NO TOAST (handled by notification event)
     socket.on('task-created', (data) => {
-      // Invalidate first, then refetch for instant UI update
-      queryClient.invalidateQueries({ 
-        predicate: (query) => query.queryKey[0] === 'tasks' 
-      });
-      queryClient.invalidateQueries({ 
-        predicate: (query) => query.queryKey[0] === 'recent-tasks' 
-      });
-      queryClient.invalidateQueries({ 
-        predicate: (query) => query.queryKey[0] === 'all-tasks' 
-      });
-      queryClient.invalidateQueries({ 
-        predicate: (query) => query.queryKey[0] === 'task-stats' 
-      });
-      queryClient.invalidateQueries({ 
-        predicate: (query) => query.queryKey[0] === 'analytics' 
-      });
-      
-      // Show toast if not the creator
-      if (data.createdBy !== user?.email) {
-        toast(`New task: ${data.task?.title || 'Task assigned'}`, {
-          icon: '📋',
-          duration: 3000,
-          position: 'top-right',
-          style: {
-            background: '#10B981',
-            color: '#fff',
-            borderRadius: '12px',
-            padding: '16px',
-            fontWeight: '500'
-          }
-        });
-      }
+      // Use debounced refetch
+      debouncedRefetch();
+      // NOTE: Toast notifications are handled by the 'notification' event
     });
 
     // Listen for tasks deleted
     socket.on('task-deleted', (data) => {
-      // Invalidate first, then refetch for instant UI update
-      queryClient.invalidateQueries({ 
-        predicate: (query) => query.queryKey[0] === 'tasks' 
-      });
-      queryClient.invalidateQueries({ 
-        predicate: (query) => query.queryKey[0] === 'recent-tasks' 
-      });
-      queryClient.invalidateQueries({ 
-        predicate: (query) => query.queryKey[0] === 'all-tasks' 
-      });
-      queryClient.invalidateQueries({ 
-        predicate: (query) => query.queryKey[0] === 'task-stats' 
-      });
+      // Use debounced refetch
+      debouncedRefetch();
       
-      // Show toast notification
+      // Show toast notification for delete (no notification event for deletes)
       if (data.deletedBy !== user?.email) {
         toast('A task was deleted', {
           icon: '🗑️',
