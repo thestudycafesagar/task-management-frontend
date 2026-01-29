@@ -84,14 +84,34 @@ export default function SettingsPage() {
 }
 
 function ProfileSettings({ user }) {
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
   });
 
+  // Update profile mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data) => {
+      const response = await apiClient.patch('/users/profile', data);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('✅ Profile updated successfully!');
+      queryClient.invalidateQueries({ queryKey: ['auth-user'] });
+      // Refresh the page to re-render all components with updated data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to update profile');
+    }
+  });
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    toast.success('Profile updated successfully!');
+    updateProfileMutation.mutate(formData);
   };
 
   return (
@@ -111,6 +131,7 @@ function ProfileSettings({ user }) {
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="pl-12"
                 placeholder="Your name"
+                required
               />
             </div>
           </div>
@@ -125,16 +146,30 @@ function ProfileSettings({ user }) {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="pl-12"
                 placeholder="your@email.com"
+                required
               />
             </div>
           </div>
 
           <div className="flex items-center gap-3 pt-4">
-            <Button type="submit">
-              <FiSave className="w-5 h-5 mr-2" />
-              Save Changes
+            <Button type="submit" disabled={updateProfileMutation.isPending}>
+              {updateProfileMutation.isPending ? (
+                <>
+                  <div className="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <FiSave className="w-5 h-5 mr-2" />
+                  Save Changes
+                </>
+              )}
             </Button>
-            <Button type="button" variant="outline">
+            <Button 
+              type="button" 
+              variant="outline"
+              onClick={() => setFormData({ name: user?.name || '', email: user?.email || '' })}
+            >
               Cancel
             </Button>
           </div>

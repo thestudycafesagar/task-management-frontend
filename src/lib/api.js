@@ -3,11 +3,20 @@ import axios from 'axios';
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
   withCredentials: true,
-  timeout: 15000, // 15 second timeout to prevent hanging
+  timeout: 30000, // 30 second timeout for slow Render startups
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// Retry configuration
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 2000; // 2 seconds
+
+/**
+ * Sleep helper for retries
+ */
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Request interceptor
 apiClient.interceptors.request.use(
@@ -34,25 +43,47 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor
+// Response interceptor with retry logic
 apiClient.interceptors.response.use(
   (response) => {
     return response;
   },
   async (error) => {
-    // Handle timeout errors
+    const originalRequest = error.config;
+
+    // Handle timeout errors with retry
     if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-      console.error('❌ Request timeout - Server may be down');
-      if (typeof window !== 'undefined') {
-        // Don't redirect on timeout, just let the error propagate
-        return Promise.reject(new Error('Request timeout - Please check if server is running'));
+      console.error('❌ Request timeout - Server may be starting up');
+      
+      // Retry logic for timeouts (Render spin-up)
+      if (!originalRequest._retry && originalRequest._retryCount < MAX_RETRIES) {
+        originalRequest._retryCount = originalRequest._retryCount || 0;
+        originalRequest._retryCount++;
+        
+        console.log(`⏳ Retrying request (${originalRequest._retryCount}/${MAX_RETRIES})...`);
+        await sleep(RETRY_DELAY);
+        
+        return apiClient(originalRequest);
       }
+      
+      return Promise.reject(new Error('Server is taking too long to respond. Please try again.'));
     }
 
-    // Handle network errors
-    if (error.message === 'Network Error') {
-      console.error('❌ Network error - Server may not be running');
-      return Promise.reject(new Error('Cannot connect to server - Please ensure backend is running'));
+    // Handle network errors with retry
+    if (error.message === 'Network Error' && !originalRequest._retry) {
+      console.error('❌ Network error - Server may be starting');
+      
+      if (originalRequest._retryCount < MAX_RETRIES) {
+        originalRequest._retryCount = originalRequest._retryCount || 0;
+        originalRequest._retryCount++;
+        
+        console.log(`⏳ Retrying request (${originalRequest._retryCount}/${MAX_RETRIES})...`);
+        await sleep(RETRY_DELAY);
+        
+        return apiClient(originalRequest);
+      }
+      
+      return Promise.reject(new Error('Cannot connect to server. Please check your connection.'));
     }
 
     if (error.response?.status === 401) {
