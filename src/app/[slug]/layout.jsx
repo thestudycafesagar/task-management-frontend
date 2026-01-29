@@ -27,7 +27,6 @@ export default function SlugLayout({ children }) {
       if (isAuthenticated) {
         // If impersonating, allow access to any slug (super admin has full control)
         if (isImpersonating && user?.role === 'SUPER_ADMIN') {
-          console.log('🔓 Super admin impersonating - allowing access to:', params.slug);
           return; // Allow access - no redirect
         }
         

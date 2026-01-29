@@ -23,7 +23,6 @@ export default function HomePage() {
     // Timeout after 10 seconds to prevent infinite loading
     const timeoutId = setTimeout(() => {
       if (!hasInitialized) {
-        console.warn('⚠️  Auth initialization timed out, redirecting to login');
         setLoadingTimeout(true);
         router.replace('/login');
       }

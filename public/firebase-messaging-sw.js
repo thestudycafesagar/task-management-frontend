@@ -2,8 +2,6 @@
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
-console.log('🔧 Firebase Service Worker loaded');
-
 // Firebase configuration - Use actual values (env vars don't work in service workers)
 firebase.initializeApp({
   apiKey: "AIzaSyBg7gQJH9r1XIoz354Y1qUsqmoGkj2halk",
@@ -15,14 +13,10 @@ firebase.initializeApp({
   measurementId: "G-GQDVRY066F"
 });
 
-console.log('✅ Firebase initialized in Service Worker');
-
 const messaging = firebase.messaging();
 
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
-  console.log('📨 Received background message:', payload);
-
   const notificationTitle = payload.notification?.title || '🔔 Task Management';
   
   // Map notification types to appropriate styling
@@ -65,21 +59,15 @@ messaging.onBackgroundMessage((payload) => {
     timestamp: Date.now()
   };
 
-  console.log('🔔 Showing notification:', notificationTitle);
-
   return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {
-  console.log('👆 Notification clicked:', event.notification);
-  console.log('Action:', event.action);
-  
   event.notification.close();
 
   // Handle action buttons
   if (event.action === 'dismiss') {
-    console.log('User dismissed notification');
     return;
   }
 
@@ -108,13 +96,11 @@ self.addEventListener('notificationclick', (event) => {
 
 // Service worker activation - skip waiting to avoid caching
 self.addEventListener('activate', (event) => {
-  console.log('✅ Service Worker activated');
   // Clear all caches on activation
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          console.log('🗑️ Deleting cache:', cacheName);
           return caches.delete(cacheName);
         })
       );
@@ -124,7 +110,6 @@ self.addEventListener('activate', (event) => {
 
 // Service worker installation - no caching, FCM only
 self.addEventListener('install', (event) => {
-  console.log('✅ Service Worker installed (FCM only, no caching)');
   self.skipWaiting();
 });
 

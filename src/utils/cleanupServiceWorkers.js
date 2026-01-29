@@ -4,6 +4,8 @@
  * to prevent notification conflicts and stale caches.
  */
 
+const isDev = typeof window !== 'undefined' && process.env.NODE_ENV !== 'production';
+
 /**
  * Unregister all service workers except the current production one
  */
@@ -28,7 +30,7 @@ export async function cleanupOldServiceWorkers() {
   try {
     const registrations = await navigator.serviceWorker.getRegistrations();
     
-    console.log(`🔧 Found ${registrations.length} service worker registration(s)`);
+    if (isDev) console.log(`Found ${registrations.length} service worker registration(s)`);
     
     for (const registration of registrations) {
       const swScope = registration.scope;
@@ -46,7 +48,7 @@ export async function cleanupOldServiceWorkers() {
         : (!isLocalhost && (isVercel || isNetlify));
       
       if (shouldClean || isDifferentOrigin) {
-        console.log(`🧹 Unregistering stale service worker: ${swScope}`);
+        if (isDev) console.log(`Unregistering stale service worker: ${swScope}`);
         try {
           await registration.unregister();
           cleaned++;
@@ -56,9 +58,9 @@ export async function cleanupOldServiceWorkers() {
       }
     }
     
-    console.log(`✅ Cleaned ${cleaned} stale service worker(s)`);
+    if (isDev) console.log(`Cleaned ${cleaned} stale service worker(s)`);
   } catch (error) {
-    console.error('❌ Error cleaning service workers:', error);
+    console.error('Error cleaning service workers:', error);
     errors.push({ scope: 'global', error: error.message });
   }
 
@@ -88,7 +90,7 @@ export async function clearFCMDatabases() {
       await new Promise((resolve, reject) => {
         const request = indexedDB.deleteDatabase(dbName);
         request.onsuccess = () => {
-          console.log(`✅ Deleted IndexedDB: ${dbName}`);
+          if (isDev) console.log(`Deleted IndexedDB: ${dbName}`);
           cleared++;
           resolve();
         };
@@ -96,7 +98,7 @@ export async function clearFCMDatabases() {
           reject(request.error);
         };
         request.onblocked = () => {
-          console.warn(`⚠️ IndexedDB ${dbName} is blocked`);
+          if (isDev) console.warn(`IndexedDB ${dbName} is blocked`);
           resolve(); // Continue anyway
         };
       });
@@ -115,16 +117,18 @@ export async function clearFCMDatabases() {
  * Full cleanup - service workers + FCM databases
  */
 export async function fullNotificationCleanup() {
-  console.log('🔧 Starting full notification cleanup...');
+  if (isDev) console.log('Starting notification cleanup...');
   
   const swResult = await cleanupOldServiceWorkers();
   const dbResult = await clearFCMDatabases();
   
-  console.log('✅ Notification cleanup complete:', {
-    serviceWorkersCleared: swResult.cleaned,
-    databasesCleared: dbResult.cleared,
-    errors: [...swResult.errors, ...dbResult.errors]
-  });
+  if (isDev) {
+    console.log('Notification cleanup complete:', {
+      serviceWorkersCleared: swResult.cleaned,
+      databasesCleared: dbResult.cleared,
+      errors: [...swResult.errors, ...dbResult.errors]
+    });
+  }
   
   return {
     serviceWorkers: swResult,
@@ -140,7 +144,7 @@ export function initNotificationCleanup() {
   
   // Run cleanup after a short delay to not block initial render
   setTimeout(() => {
-    fullNotificationCleanup().catch(console.error);
+    fullNotificationCleanup().catch(() => {});
   }, 2000);
 }
 

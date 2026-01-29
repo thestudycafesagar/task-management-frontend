@@ -8,6 +8,8 @@ import useNotificationStore from '@/store/notificationStore';
 import toast from 'react-hot-toast';
 import Cookies from 'js-cookie';
 
+const isDev = process.env.NODE_ENV !== 'production';
+
 // Debounce helper
 const debounce = (func, wait) => {
   let timeout;
@@ -76,10 +78,10 @@ export const useSocketNotifications = () => {
     // Handle connection errors
     socket.on('connect_error', (error) => {
       reconnectAttempts.current++;
-      console.error(`❌ Socket connection error (attempt ${reconnectAttempts.current}):`, error.message);
+      if (isDev) console.error(`Socket connection error (attempt ${reconnectAttempts.current}):`, error.message);
       
       if (reconnectAttempts.current >= maxReconnectAttempts) {
-        console.error('Max reconnection attempts reached. Please check your network and server.');
+        console.error('Max reconnection attempts reached');
         toast.error('Unable to connect to notification service. Please refresh the page.', {
           duration: 5000,
           position: 'top-center'
@@ -91,7 +93,7 @@ export const useSocketNotifications = () => {
     socket.on('notification', (notification) => {
       // Deduplicate notifications
       if (notification._id && notification._id === lastNotificationId.current) {
-        console.log('⚠️ Duplicate notification ignored:', notification._id);
+        if (isDev) console.log('Duplicate notification ignored:', notification._id);
         return;
       }
       lastNotificationId.current = notification._id;
@@ -122,7 +124,7 @@ export const useSocketNotifications = () => {
       // Throttle task updates to prevent cascading
       const now = Date.now();
       if (now - lastTaskUpdateTime.current < 300) {
-        console.log('⚠️ Task update throttled');
+        if (isDev) console.log('Task update throttled');
         return;
       }
       lastTaskUpdateTime.current = now;

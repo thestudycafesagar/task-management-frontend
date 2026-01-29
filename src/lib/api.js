@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+const isDev = typeof window !== 'undefined' && process.env.NODE_ENV !== 'production';
+
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
   withCredentials: true,
@@ -56,13 +58,13 @@ apiClient.interceptors.response.use(
 
     // Handle timeout errors with retry
     if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-      console.error('❌ Request timeout - Server may be starting up');
+      if (isDev) console.error('Request timeout - Server may be starting up');
       
       // Retry logic for timeouts
       if (!originalRequest._retry && (originalRequest._retryCount || 0) < MAX_RETRIES) {
         originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
         
-        console.log(`⏳ Retrying request (${originalRequest._retryCount}/${MAX_RETRIES})...`);
+        if (isDev) console.log(`Retrying request (${originalRequest._retryCount}/${MAX_RETRIES})...`);
         await sleep(RETRY_DELAY);
         
         return apiClient(originalRequest);
@@ -73,12 +75,12 @@ apiClient.interceptors.response.use(
 
     // Handle network errors with retry
     if (error.message === 'Network Error' && !originalRequest._retry) {
-      console.error('❌ Network error - Server may be starting');
+      if (isDev) console.error('Network error - Server may be starting');
       
       if ((originalRequest._retryCount || 0) < MAX_RETRIES) {
         originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
         
-        console.log(`⏳ Retrying request (${originalRequest._retryCount}/${MAX_RETRIES})...`);
+        if (isDev) console.log(`Retrying request (${originalRequest._retryCount}/${MAX_RETRIES})...`);
         await sleep(RETRY_DELAY);
         
         return apiClient(originalRequest);

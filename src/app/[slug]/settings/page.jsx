@@ -496,13 +496,6 @@ function NotificationSettings() {
         new Date(a.createdAt) - new Date(b.createdAt)
       );
       
-      console.log('📋 Organization Admins:', admins.map(a => ({ 
-        id: a._id, 
-        email: a.email, 
-        name: a.name,
-        createdAt: a.createdAt 
-      })));
-      
       // Return the primary admin (earliest created)
       return admins.length > 0 ? admins[0] : null;
     },
@@ -511,26 +504,16 @@ function NotificationSettings() {
 
   const changePasswordMutation = useMutation({
     mutationFn: async (data) => {
-      console.log('🔐 Changing password...', {
-        isImpersonating,
-        targetUserId: targetAdmin?._id,
-        targetUserEmail: targetAdmin?.email,
-        targetUserName: targetAdmin?.name,
-        newPasswordLength: data.newPassword.length
-      });
-
       // If impersonating, use force change endpoint (no current password needed)
       if (isImpersonating && targetAdmin) {
         // Use the primary admin's ID (organization creator)
         const response = await apiClient.post(`/users/${targetAdmin._id}/force-change-password`, {
           newPassword: data.newPassword
         });
-        console.log('✅ Password change response:', response.data);
         return response.data;
       } else {
         // Regular password change
         const response = await apiClient.patch('/users/change-password', data);
-        console.log('✅ Password change response:', response.data);
         return response.data;
       }
     },
