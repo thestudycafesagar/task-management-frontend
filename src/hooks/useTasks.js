@@ -20,17 +20,17 @@ export const useTasks = (filters = {}) => {
   } = useQuery({
     queryKey: ['tasks', params?.slug, filters],
     queryFn: () => taskService.getTasks(filters),
-    staleTime: 60000, // 1 minute - socket handles real-time updates
+    staleTime: 30000, // 30 seconds - balance between performance and freshness
     refetchOnMount: 'always',
-    refetchOnWindowFocus: false, // Don't refetch on tab focus to reduce API calls
+    refetchOnWindowFocus: false, // Socket handles real-time updates
   });
 
   // Fetch task stats
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['task-stats', params?.slug],
     queryFn: taskService.getTaskStats,
-    staleTime: 120000, // 2 minutes
-    refetchOnMount: false,
+    staleTime: 30000, // 30 seconds
+    refetchOnMount: 'always',
     refetchOnWindowFocus: false,
   });
 
@@ -38,9 +38,8 @@ export const useTasks = (filters = {}) => {
   const { data: analytics, isLoading: analyticsLoading } = useQuery({
     queryKey: ['analytics', params?.slug],
     queryFn: taskService.getTaskAnalytics,
-    staleTime: 120000, // 2 minutes
+    staleTime: 60000, // 1 minute for analytics
     refetchOnWindowFocus: false,
-    // Removed refetchInterval - too aggressive
   });
 
   // Create task mutation

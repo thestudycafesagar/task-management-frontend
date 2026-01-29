@@ -10,15 +10,6 @@ import Cookies from 'js-cookie';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
-// Debounce helper
-const debounce = (func, wait) => {
-  let timeout;
-  return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-};
-
 export const useSocketNotifications = () => {
   const { isAuthenticated, user, hasInitialized, token } = useAuthStore();
   const { addNotification } = useNotificationStore();
@@ -27,17 +18,23 @@ export const useSocketNotifications = () => {
   const maxReconnectAttempts = 5;
   const hasConnected = useRef(false);
   const lastNotificationId = useRef(null);
-  const lastTaskUpdateTime = useRef(0);
+  const lastRefetchTime = useRef(0);
 
-  // Debounced refetch to prevent cascading API calls
-  const debouncedRefetch = useCallback(
-    debounce(() => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['task-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    }, 500),
-    [queryClient]
-  );
+  // Immediate refetch for real-time updates (with throttle to prevent flooding)
+  const refetchTasks = useCallback(() => {
+    const now = Date.now();
+    // Throttle: minimum 1 second between refetches
+    if (now - lastRefetchTime.current < 1000) {
+      if (isDev) console.log('Refetch throttled');
+      return;
+    }
+    lastRefetchTime.current = now;
+
+    // Use refetchQueries to force immediate refetch (not just invalidate)
+    queryClient.refetchQueries({ queryKey: ['tasks'], type: 'active' });
+    queryClient.refetchQueries({ queryKey: ['task-stats'], type: 'active' });
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  }, [queryClient]);
 
   useEffect(() => {
     // Only try to connect if:
@@ -115,38 +112,26 @@ export const useSocketNotifications = () => {
         }
       });
 
-      // Debounced refetch to prevent API flooding
-      debouncedRefetch();
+      // Immediate refetch for real-time updates
+      refetchTasks();
     });
 
-    // Listen for task updates (real-time collaboration) - NO TOAST HERE (handled by notification event)
+    // Listen for task updates (real-time collaboration)
     socket.on('task-updated', (data) => {
-      // Throttle task updates to prevent cascading
-      const now = Date.now();
-      if (now - lastTaskUpdateTime.current < 300) {
-        if (isDev) console.log('Task update throttled');
-        return;
-      }
-      lastTaskUpdateTime.current = now;
-
-      // Use debounced refetch instead of immediate invalidation
-      debouncedRefetch();
-      
-      // NOTE: Toast notifications are handled by the 'notification' event
-      // Don't show duplicate toasts here
+      // Immediate refetch for real-time updates
+      refetchTasks();
     });
 
-    // Listen for new tasks created - NO TOAST (handled by notification event)
+    // Listen for new tasks created
     socket.on('task-created', (data) => {
-      // Use debounced refetch
-      debouncedRefetch();
-      // NOTE: Toast notifications are handled by the 'notification' event
+      // Immediate refetch for real-time updates
+      refetchTasks();
     });
 
     // Listen for tasks deleted
     socket.on('task-deleted', (data) => {
-      // Use debounced refetch
-      debouncedRefetch();
+      // Immediate refetch for real-time updates
+      refetchTasks();
       
       // Show toast notification for delete (no notification event for deletes)
       if (data.deletedBy !== user?.email) {
