@@ -1,9 +1,11 @@
 'use client';
 
+import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import NavigationLoader from '@/components/NavigationLoader';
 import { useSocketNotifications } from '@/hooks/useSocketNotifications';
 import useFCMToken from '@/hooks/useFCMToken';
+import { initNotificationCleanup } from '@/utils/cleanupServiceWorkers';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +23,12 @@ const queryClient = new QueryClient({
 function SocketProvider({ children }) {
   useSocketNotifications();
   useFCMToken(); // Initialize FCM token registration
+  
+  // Cleanup old service workers on mount
+  useEffect(() => {
+    initNotificationCleanup();
+  }, []);
+  
   return <>{children}</>;
 }
 

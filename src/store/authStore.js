@@ -1,42 +1,46 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import apiClient from '@/lib/api';
 
 /**
  * Auth store for managing authentication state
+ * Uses persist middleware to survive page refreshes
  */
-const useAuthStore = create((set, get) => ({
-  user: null,
-  organization: null,
-  isImpersonating: false,
-  hasAdminPrivileges: false,
-  isLoading: false,
-  isAuthenticated: false,
-  hasInitialized: false,
-  token: null, // Store token for Socket.IO
+const useAuthStore = create(
+  persist(
+    (set, get) => ({
+      user: null,
+      organization: null,
+      isImpersonating: false,
+      hasAdminPrivileges: false,
+      isLoading: false,
+      isAuthenticated: false,
+      hasInitialized: false,
+      token: null, // Store token for Socket.IO
 
-  /**
-   * Set user data
-   */
-  setUser: (user) => set({ user, isAuthenticated: !!user }),
+      /**
+       * Set user data
+       */
+      setUser: (user) => set({ user, isAuthenticated: !!user }),
 
-  /**
-   * Set token
-   */
-  setToken: (token) => set({ token }),
+      /**
+       * Set token
+       */
+      setToken: (token) => set({ token }),
 
-  /**
-   * Set organization data
-   */
-  setOrganization: (organization) => set({ organization }),
+      /**
+       * Set organization data
+       */
+      setOrganization: (organization) => set({ organization }),
 
-  /**
-   * Set impersonation status
-   */
-  setImpersonating: (isImpersonating) => set({ isImpersonating }),
+      /**
+       * Set impersonation status
+       */
+      setImpersonating: (isImpersonating) => set({ isImpersonating }),
 
-  /**
-   * Fetch current user
-   */
+      /**
+       * Fetch current user
+       */
   fetchUser: async () => {
     try {
       set({ isLoading: true });
@@ -150,6 +154,20 @@ const useAuthStore = create((set, get) => ({
   updateFCMToken: async (fcmToken) => {
     await apiClient.post('/auth/fcm-token', { fcmToken });
   },
-}));
+    }),
+    {
+      name: 'auth-storage', // localStorage key
+      partialize: (state) => ({
+        // Only persist essential auth data
+        user: state.user,
+        organization: state.organization,
+        token: state.token,
+        isAuthenticated: state.isAuthenticated,
+        hasAdminPrivileges: state.hasAdminPrivileges,
+        isImpersonating: state.isImpersonating,
+      }),
+    }
+  )
+);
 
 export default useAuthStore;

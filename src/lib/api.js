@@ -3,7 +3,7 @@ import axios from 'axios';
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
   withCredentials: true,
-  timeout: 30000, // 30 second timeout for slow Render startups
+  timeout: 30000, // 30 second timeout for slow startups
   headers: {
     'Content-Type': 'application/json',
   },
@@ -12,6 +12,9 @@ const apiClient = axios.create({
 // Retry configuration
 const MAX_RETRIES = 2;
 const RETRY_DELAY = 2000; // 2 seconds
+
+// Track if we're already handling a 401 to prevent loops
+let isHandling401 = false;
 
 /**
  * Sleep helper for retries
@@ -55,10 +58,9 @@ apiClient.interceptors.response.use(
     if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
       console.error('❌ Request timeout - Server may be starting up');
       
-      // Retry logic for timeouts (Render spin-up)
-      if (!originalRequest._retry && originalRequest._retryCount < MAX_RETRIES) {
-        originalRequest._retryCount = originalRequest._retryCount || 0;
-        originalRequest._retryCount++;
+      // Retry logic for timeouts
+      if (!originalRequest._retry && (originalRequest._retryCount || 0) < MAX_RETRIES) {
+        originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
         
         console.log(`⏳ Retrying request (${originalRequest._retryCount}/${MAX_RETRIES})...`);
         await sleep(RETRY_DELAY);
@@ -73,9 +75,8 @@ apiClient.interceptors.response.use(
     if (error.message === 'Network Error' && !originalRequest._retry) {
       console.error('❌ Network error - Server may be starting');
       
-      if (originalRequest._retryCount < MAX_RETRIES) {
-        originalRequest._retryCount = originalRequest._retryCount || 0;
-        originalRequest._retryCount++;
+      if ((originalRequest._retryCount || 0) < MAX_RETRIES) {
+        originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
         
         console.log(`⏳ Retrying request (${originalRequest._retryCount}/${MAX_RETRIES})...`);
         await sleep(RETRY_DELAY);
@@ -86,26 +87,43 @@ apiClient.interceptors.response.use(
       return Promise.reject(new Error('Cannot connect to server. Please check your connection.'));
     }
 
-    if (error.response?.status === 401) {
-      // Clear any invalid cookies and redirect to login
-      if (typeof window !== 'undefined') {
-        // Clear the auth cookie
-        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    // Handle 401 errors - but don't immediately logout
+    // Only logout on 401 from /auth/me endpoint (session validation)
+    if (error.response?.status === 401 && !isHandling401) {
+      const isAuthMeRequest = originalRequest.url?.includes('/auth/me');
+      const isLoginRequest = originalRequest.url?.includes('/auth/login');
+      
+      // Don't handle 401 for login requests (wrong password)
+      if (isLoginRequest) {
+        return Promise.reject(error);
+      }
+      
+      // Only force logout if the /auth/me endpoint returns 401
+      // This means the session is truly invalid
+      if (isAuthMeRequest) {
+        isHandling401 = true;
         
-        // Clear auth store if available
-        try {
-          const { default: useAuthStore } = await import('@/store/authStore');
-          const store = useAuthStore.getState();
-          store.setUser(null);
-          store.setOrganization(null);
-        } catch (e) {
-          // Store might not be available, continue anyway
+        if (typeof window !== 'undefined') {
+          // Clear the auth cookie
+          document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+          
+          // Clear auth store
+          try {
+            localStorage.removeItem('auth-storage');
+          } catch (e) {
+            // Ignore
+          }
+          
+          // Only redirect if not already on login page
+          if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/login';
+          }
         }
         
-        // Only redirect if not already on login page
-        if (!window.location.pathname.includes('/login')) {
-          window.location.href = '/login';
-        }
+        // Reset flag after a delay
+        setTimeout(() => {
+          isHandling401 = false;
+        }, 2000);
       }
     }
     return Promise.reject(error);

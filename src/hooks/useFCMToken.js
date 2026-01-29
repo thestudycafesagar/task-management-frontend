@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage, deleteToken } from 'firebase/messaging';
 import { initializeApp, getApps } from 'firebase/app';
 import { firebaseConfig, vapidKey } from '@/lib/firebase';
 import useAuthStore from '@/store/authStore';
@@ -16,6 +16,15 @@ export default function useFCMToken() {
   const [token, setToken] = useState(null);
   const [notificationPermission, setNotificationPermission] = useState('default');
   const hasAttemptedInit = useRef(false);
+  const lastRegisteredToken = useRef(null);
+
+  // Reset initialization flag when user changes (logout/login)
+  useEffect(() => {
+    if (!user) {
+      hasAttemptedInit.current = false;
+      lastRegisteredToken.current = null;
+    }
+  }, [user]);
 
   useEffect(() => {
     // Only run in browser, if user is authenticated, and initialization is complete
@@ -23,7 +32,7 @@ export default function useFCMToken() {
       return;
     }
 
-    // Prevent multiple initialization attempts
+    // Prevent multiple initialization attempts for the same user session
     if (hasAttemptedInit.current) return;
     hasAttemptedInit.current = true;
 
@@ -48,7 +57,7 @@ export default function useFCMToken() {
     // Add a small delay to ensure everything else is ready
     const timeoutId = setTimeout(() => {
       initFCM();
-    }, 1000);
+    }, 1500);
 
     return () => clearTimeout(timeoutId);
   }, [user, isAuthenticated, hasInitialized]);
