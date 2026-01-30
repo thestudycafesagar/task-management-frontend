@@ -9,6 +9,7 @@ import TaskModal from '@/components/TaskModal';
 import { CardSkeleton } from '@/components/SkeletonLoader';
 import EmptyState from '@/components/EmptyState';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import NotificationSettings from '@/components/NotificationSettings';
 import useAuthStore from '@/store/authStore';
 import apiClient from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -105,6 +106,11 @@ export default function DashboardPage() {
             </Card>
           );
         })}
+      </div>
+
+      {/* Notification Settings */}
+      <div className="mb-6">
+        <NotificationSettings />
       </div>
 
       {/* Recent Tasks */}

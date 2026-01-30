@@ -19,6 +19,78 @@ export default function useFCMToken() {
   const [notificationPermission, setNotificationPermission] = useState('default');
   const hasAttemptedInit = useRef(false);
   const lastRegisteredToken = useRef(null);
+  const hasShownPermissionPrompt = useRef(false);
+
+  // Request notification permission
+  const requestNotificationPermission = async () => {
+    try {
+      if (Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        setNotificationPermission(permission);
+        
+        if (permission === 'granted') {
+          toast.success('🔔 Notifications enabled! You\'ll receive task updates.', {
+            duration: 3000,
+            position: 'top-center'
+          });
+          // Register FCM token now that permission is granted
+          await registerFCMToken();
+        } else {
+          toast.error('Notifications disabled. You won\'t receive task updates.', {
+            duration: 4000,
+            position: 'top-center'
+          });
+        }
+        return permission;
+      }
+      return Notification.permission;
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+      return 'denied';
+    }
+  };
+
+  // Show notification permission prompt
+  const showNotificationPrompt = () => {
+    if (hasShownPermissionPrompt.current || Notification.permission === 'granted') return;
+    hasShownPermissionPrompt.current = true;
+
+    toast((t) => (
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🔔</span>
+          <span className="font-medium text-sm">Enable notifications to stay updated with task assignments!</span>
+        </div>
+        <div className="flex gap-2 mt-2">
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              requestNotificationPermission();
+            }}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+          >
+            Enable
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+          >
+            Maybe Later
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: 8000,
+      position: 'top-center',
+      style: {
+        background: '#1f2937',
+        color: '#fff',
+        borderRadius: '12px',
+        padding: '16px',
+        minWidth: '320px'
+      }
+    });
+  };
 
   // Reset initialization flag when user changes (logout/login)
   useEffect(() => {
@@ -44,12 +116,15 @@ export default function useFCMToken() {
         const permission = Notification.permission;
         setNotificationPermission(permission);
 
-        // Only register if already granted (don't auto-request)
         if (permission === 'granted') {
           if (isDev) console.log('Notification permission granted, registering FCM token...');
           await registerFCMToken();
+        } else if (permission === 'default') {
+          // Show permission prompt for first-time users
+          setTimeout(() => showNotificationPrompt(), 2000);
+          if (isDev) console.log('Notification permission not set - showing prompt');
         } else {
-          if (isDev) console.log('Notification permission not granted:', permission);
+          if (isDev) console.log('Notification permission denied:', permission);
         }
       } catch (error) {
         console.error('Error initializing FCM:', error);
@@ -117,18 +192,15 @@ export default function useFCMToken() {
           console.error('No FCM token available');
         }
 
-        // Listen for foreground messages
+        // Listen for foreground messages (FCM push notifications)
+        // NOTE: Socket.IO already handles in-app toast notifications
+        // FCM foreground handler only shows browser notification (no toast to avoid duplicates)
         onMessage(messaging, (payload) => {
-          if (isDev) console.log('Foreground message received:', payload);
+          if (isDev) console.log('FCM foreground message received:', payload);
           
           if (payload.notification) {
-            // Show toast notification
-            toast.success(payload.notification.title, {
-              description: payload.notification.body,
-              duration: 5000,
-            });
-            
-            // Also show browser notification with professional styling
+            // Only show browser notification (no toast - Socket.IO handles that)
+            // Browser notification for OS-level alerts
             if (Notification.permission === 'granted') {
               const typeConfig = {
                 'TASK_ASSIGNED': { icon: '📋', requireInteraction: true },
@@ -167,6 +239,8 @@ export default function useFCMToken() {
     notificationPermission,
     isSupported: typeof window !== 'undefined' && 'Notification' in window,
     registerFCMToken, // Expose for manual triggering
+    requestNotificationPermission, // Expose permission request function
+    showNotificationPrompt, // Expose prompt function
   };
 }
 
