@@ -6,7 +6,6 @@ import { initializeApp, getApps } from 'firebase/app';
 import { firebaseConfig, vapidKey } from '@/lib/firebase';
 import useAuthStore from '@/store/authStore';
 import apiClient from '@/lib/api';
-import toast from 'react-hot-toast';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -117,18 +116,14 @@ export default function useFCMToken() {
           console.error('No FCM token available');
         }
 
-        // Listen for foreground messages
+        // Listen for foreground messages (FCM push notifications)
+        // NOTE: Socket.IO already handles in-app toast notifications
+        // FCM foreground handler only shows browser notification (no toast to avoid duplicates)
         onMessage(messaging, (payload) => {
-          if (isDev) console.log('Foreground message received:', payload);
+          if (isDev) console.log('FCM foreground message received:', payload);
           
           if (payload.notification) {
-            // Show toast notification
-            toast.success(payload.notification.title, {
-              description: payload.notification.body,
-              duration: 5000,
-            });
-            
-            // Also show browser notification with professional styling
+            // Only show browser notification (no toast - Socket.IO handles that)
             if (Notification.permission === 'granted') {
               const typeConfig = {
                 'TASK_ASSIGNED': { icon: '📋', requireInteraction: true },
