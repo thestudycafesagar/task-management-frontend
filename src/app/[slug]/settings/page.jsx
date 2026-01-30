@@ -30,7 +30,7 @@ export default function SettingsPage() {
     { id: 'profile', label: 'Profile', icon: FiUser, adminOnly: true },
     { id: 'company', label: 'Company', icon: FiBriefcase, adminOnly: true },
     { id: 'notifications', label: 'Notifications', icon: FiBell, adminOnly: false },
-    { id: 'security', label: 'Security', icon: FiShield, adminOnly: true },
+    { id: 'security', label: 'Security', icon: FiShield, adminOnly: false }, // Now available to employees
   ];
 
   // When impersonating or admin, super admin gets full access
@@ -469,7 +469,9 @@ function NotificationSettings() {
   );
 }function SecuritySettings() {
   const queryClient = useQueryClient();
-  const { user, isImpersonating, organization } = useAuthStore();
+  const { user, isImpersonating, organization, hasAdminPrivileges } = useAuthStore();
+  const hasAdminAccess = hasAdminPrivileges || user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  
   const [passwords, setPasswords] = useState({
     currentPassword: '',
     newPassword: '',
@@ -481,7 +483,7 @@ function NotificationSettings() {
     confirm: false
   });
 
-  // Fetch the organization admin whose password we want to change
+  // Fetch the organization admin whose password we want to change (admin only)
   const { data: targetAdmin } = useQuery({
     queryKey: ['target-admin', organization?._id, organization?.slug],
     queryFn: async () => {
@@ -499,20 +501,20 @@ function NotificationSettings() {
       // Return the primary admin (earliest created)
       return admins.length > 0 ? admins[0] : null;
     },
-    enabled: isImpersonating && !!organization?._id
+    enabled: isImpersonating && !!organization?._id && hasAdminAccess
   });
 
   const changePasswordMutation = useMutation({
     mutationFn: async (data) => {
-      // If impersonating, use force change endpoint (no current password needed)
-      if (isImpersonating && targetAdmin) {
+      // If admin impersonating, use force change endpoint (no current password needed)
+      if (isImpersonating && targetAdmin && hasAdminAccess) {
         // Use the primary admin's ID (organization creator)
         const response = await apiClient.post(`/users/${targetAdmin._id}/force-change-password`, {
           newPassword: data.newPassword
         });
         return response.data;
       } else {
-        // Regular password change
+        // Regular password change (for employees and admins changing their own password)
         const response = await apiClient.patch('/users/change-password', data);
         return response.data;
       }
@@ -559,11 +561,11 @@ function NotificationSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Security Settings</CardTitle>
+        <CardTitle>Change Password</CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Super Admin Badge */}
-        {isImpersonating && (
+        {/* Super Admin Badge - Only show for impersonating admins */}
+        {isImpersonating && hasAdminAccess && (
           <div className="mb-6 p-4 bg-warning/10 border-2 border-warning/30 rounded-xl">
             <div className="flex items-center gap-2 text-warning">
               <FiShield className="w-5 h-5" />
@@ -573,8 +575,8 @@ function NotificationSettings() {
         )}
 
         <form onSubmit={handlePasswordChange} className="space-y-6">
-          {/* Current Password - Only show if NOT impersonating */}
-          {!isImpersonating && (
+          {/* Current Password - Show for everyone except impersonating admins */}
+          {!(isImpersonating && hasAdminAccess) && (
             <div className="space-y-2">
               <Label>Current Password</Label>
               <div className="relative">
