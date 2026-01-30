@@ -19,7 +19,6 @@ export const useSocketNotifications = () => {
   const hasConnected = useRef(false);
   const lastNotificationId = useRef(null);
   const lastRefetchTime = useRef(0);
-  const processedTaskEvents = useRef(new Set()); // Track processed task events to avoid duplicates
 
   // Immediate refetch for real-time updates (with throttle to prevent flooding)
   const refetchTasks = useCallback(() => {
@@ -119,32 +118,12 @@ export const useSocketNotifications = () => {
 
     // Listen for task updates (real-time collaboration)
     socket.on('task-updated', (data) => {
-      // Create unique event key to prevent duplicate processing
-      const eventKey = `update-${data.task?._id}-${Date.now()}`;
-      if (processedTaskEvents.current.has(eventKey)) return;
-      processedTaskEvents.current.add(eventKey);
-      // Clean up old events (keep only last 20)
-      if (processedTaskEvents.current.size > 20) {
-        const entries = Array.from(processedTaskEvents.current);
-        processedTaskEvents.current = new Set(entries.slice(-10));
-      }
-      
       // Immediate refetch for real-time updates
       refetchTasks();
     });
 
     // Listen for new tasks created
     socket.on('task-created', (data) => {
-      // Create unique event key to prevent duplicate processing
-      const eventKey = `create-${data.task?._id}-${Date.now()}`;
-      if (processedTaskEvents.current.has(eventKey)) return;
-      processedTaskEvents.current.add(eventKey);
-      // Clean up old events
-      if (processedTaskEvents.current.size > 20) {
-        const entries = Array.from(processedTaskEvents.current);
-        processedTaskEvents.current = new Set(entries.slice(-10));
-      }
-      
       // Immediate refetch for real-time updates
       refetchTasks();
     });

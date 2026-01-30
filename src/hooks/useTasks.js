@@ -47,9 +47,8 @@ export const useTasks = (filters = {}) => {
     mutationFn: taskService.createTask,
     onSuccess: () => {
       toast.success('✅ Task created successfully!');
-      // Use refetchQueries for immediate update (socket also triggers this)
-      queryClient.refetchQueries({ queryKey: ['tasks'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['task-stats'], type: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task-stats'] });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to create task');
@@ -61,9 +60,8 @@ export const useTasks = (filters = {}) => {
     mutationFn: ({ taskId, updates }) => taskService.updateTask(taskId, updates),
     onSuccess: () => {
       toast.success('✅ Task updated successfully!');
-      // Use refetchQueries for immediate update
-      queryClient.refetchQueries({ queryKey: ['tasks'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['task-stats'], type: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task-stats'] });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to update task');
@@ -75,9 +73,8 @@ export const useTasks = (filters = {}) => {
     mutationFn: taskService.deleteTask,
     onSuccess: () => {
       toast.success('✅ Task deleted successfully!');
-      // Use refetchQueries for immediate update
-      queryClient.refetchQueries({ queryKey: ['tasks'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['task-stats'], type: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task-stats'] });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to delete task');
@@ -89,9 +86,8 @@ export const useTasks = (filters = {}) => {
     mutationFn: ({ taskId, status }) => taskService.updateTaskStatus(taskId, status),
     onSuccess: () => {
       toast.success('✅ Status updated successfully!');
-      // Use refetchQueries for immediate update
-      queryClient.refetchQueries({ queryKey: ['tasks'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['task-stats'], type: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task-stats'] });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to update status');
@@ -103,7 +99,7 @@ export const useTasks = (filters = {}) => {
     mutationFn: ({ taskId, file }) => taskService.uploadAttachment(taskId, file),
     onSuccess: () => {
       toast.success('✅ Attachment uploaded successfully!');
-      queryClient.refetchQueries({ queryKey: ['tasks'], type: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to upload attachment');
@@ -116,7 +112,7 @@ export const useTasks = (filters = {}) => {
       taskService.deleteAttachment(taskId, attachmentId),
     onSuccess: () => {
       toast.success('✅ Attachment deleted successfully!');
-      queryClient.refetchQueries({ queryKey: ['tasks'], type: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to delete attachment');
